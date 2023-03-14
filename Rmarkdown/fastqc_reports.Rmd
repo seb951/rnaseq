@@ -1,0 +1,147 @@
+---
+title: "fastQC reports"
+author: "Sébastien Renaut (sebastien.renaut@criucpq.ulaval.ca)"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    number_sections: T
+params:
+  fq.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastq'
+  qc.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastqc_results'
+  threads: 12
+  fastqc.path: 'C:/Program\ Files/FastQC/fastqc' 
+---
+
+
+# Introduction  
+* This is a fastQC report of raw sequences. I uses functions from `fastqcr`, which is itself a wrapper for [`fastqc`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+* You can knit this directly from `Rstudio` or you can create this document by running `Rscript -e "rmarkdown::render('fastqc_reports.Rmd',params = list())"` on a Linux/Unix machine. 
+
+
+ 
+ 
+```{r, timehook,echo=F}
+knitr::knit_hooks$set(timehook = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      # record the current time before each chunk
+      now <<- Sys.time()
+    } else {
+      # calculate the time difference after a chunk
+      res <- difftime(Sys.time(), now)
+      # return a character string to show the time
+      paste("\n\n\nTime for this code chunk to run:",signif(res,3),attr(res,'units'))
+    }
+  }
+}))
+``` 
+
+```{r, requirements,echo=TRUE}
+library(fastqcr)
+library(DT)
+```
+
+```{r, functions,echo = F}
+###hack for windows
+fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "") 
+{
+  fq.dir = sub('C:','/mnt/c',fq.dir)
+  qc.dir = sub('C:','/mnt/c',qc.dir)
+  fastqc.path = sub('C:','wsl.exe /mnt/c',fastqc.path)
+  
+  if (is.null(qc.dir)) 
+    qc.dir <- file.path(fq.dir, "FASTQC")
+  #.create_dir(qc.dir)
+  cmd <- paste0(fastqc.path, " ", fq.dir, "/*  --threads ", 
+                threads, " --outdir ", qc.dir)
+  system(cmd)
+}
+
+
+
+fastqcr_wrapper = function(fq.dir = 'path',
+                           qc.dir = 'path', 
+                           threads = 8,
+                           fastqc.path = 'path'){
+  
+  if(Sys.info()['sysname'] != 'Windows') {
+    fastqc(qc.dir = qc.dir ,fq.dir= fq.dir,threads= threads,fastqc.path= fastqc.path)}
+  
+  if(Sys.info()['sysname'] == 'Windows') {
+    message('waning: Running a modified version of fastqc() for Windows');
+    fastqc_windows(qc.dir = qc.dir,
+                   fq.dir = fq.dir,
+                   threads = threads,
+                   fastqc.path = fastqc.path)}
+  
+  
+  #zip the whole thing
+  zip = paste0('zip ',file.path(fq.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
+  system(zip)
+  
+  message(paste0(Sys.time(),
+                 '--- Zip archive is stored here: ',
+                 file.path(fq.dir,"../fastqc_individual_reports.zip")))
+
+  #aggregate results
+  qc = suppressMessages(qc_aggregate(qc.dir = qc.dir, progressbar = F))
+  
+  # Generates a summary of qc_aggregate
+  qc_summary = summary(qc)
+  
+  # General statistics of fastqc reports.
+  qc_stats = qc_stats(qc)
+
+  return(list(qc_summary,qc_stats))
+}
+```
+
+# FastQC parameters
+```{r, parameters,message = T, echo =T}
+print(params)
+```
+
+# Running FastQC functions
+```{r, tables,message = T, eval = T, echo = T, timehook = T}
+fastqc_statitics= fastqcr_wrapper(fq.dir = params$fq.dir,
+                qc.dir = params$qc.dir,
+                threads = params$threads,
+                fastqc.path = params$fastqc.path)
+```
+
+# Summary table
+  * Listing statistics for each .fastq file
+```{r, summary_tables,echo = F}
+  #datatable 
+  datatable(fastqc_statitics[[2]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics"), style="color:darkred"))
+``` 
+
+
+# Summary table (detailed)
+  * Listing summary statistics for the whole cohort
+```{r, summary_detailed,echo = F}
+  #datatable
+  datatable(fastqc_statitics[[1]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics (detailed)"), style="color:darkred"))
+```
+
+
+# QC Plots
+ * A few plots that might be worth looking at (but remember that we have all individual plots).
+```{r, plots,timehook =T, echo=F}
+qc.files <- list.files(params$qc.dir,pattern = '.zip', full.names = TRUE)
+qc.names = gsub("_fastqc.zip","",list.files(params$qc.dir,pattern = '.zip', full.names = F))
+nb_samples <- length(qc.files)
+modules = c("all")
+
+qc_read_collection <- suppressMessages(qc_read_collection(qc.files, sample_names = qc.names,modules = modules))
+
+# Plot per sequence GC content
+qc_plot_collection(qc_read_collection, "Per sequence GC content")
+
+# Per base sequence quality
+qc_plot_collection(qc_read_collection, "Per base sequence quality")
+
+# Per sequence quality scores
+qc_plot_collection(qc_read_collection, "Per sequence quality scores")
+```

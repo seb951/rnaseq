@@ -10,6 +10,7 @@ params:
   qc.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastqc_results'
   threads: 12
   fastqc.path: 'C:/Program\ Files/FastQC/fastqc' 
+  metadata: 'C:/Users/renseb01/Documents/rnaseq/data/librairies_1_a_70_et_RIN.xlsx'
 ---
 
 
@@ -37,9 +38,11 @@ knitr::knit_hooks$set(timehook = local({
 }))
 ``` 
 
-```{r, requirements,echo=TRUE}
+```{r, requirements,echo=TRUE,message =FALSE}
 library(fastqcr)
 library(DT)
+library(readxl)
+library(dplyr)
 ```
 
 ```{r, functions,echo = F}
@@ -49,7 +52,7 @@ fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.
   fq.dir = sub('C:','/mnt/c',fq.dir)
   qc.dir = sub('C:','/mnt/c',qc.dir)
   fastqc.path = sub('C:','wsl.exe /mnt/c',fastqc.path)
-  
+
   if (is.null(qc.dir)) 
     qc.dir <- file.path(fq.dir, "FASTQC")
   #.create_dir(qc.dir)
@@ -63,7 +66,8 @@ fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.
 fastqcr_wrapper = function(fq.dir = 'path',
                            qc.dir = 'path', 
                            threads = 8,
-                           fastqc.path = 'path'){
+                           fastqc.path = 'path',
+                           metadata.dir = NULL){
   
   if(Sys.info()['sysname'] != 'Windows') {
     fastqc(qc.dir = qc.dir ,fq.dir= fq.dir,threads= threads,fastqc.path= fastqc.path)}
@@ -92,8 +96,30 @@ fastqcr_wrapper = function(fq.dir = 'path',
   
   # General statistics of fastqc reports.
   qc_stats = qc_stats(qc)
+  qc_stats$ends = sapply(strsplit(qc_stats$sample,split = '_'),tail, 1)
+  qc_stats$bio_sample = gsub('_R[12]','',qc_stats$sample)
+  
+  #qc_read_collection
+  qc.files <- list.files(qc.dir,pattern = '.zip', full.names = TRUE)
+  qc.names = gsub("_fastqc.zip","",list.files(qc.dir,pattern = '.zip',full.names = F))
 
-  return(list(qc_summary,qc_stats))
+  qc_read_collection <- suppressMessages(qc_read_collection(qc.files,sample_names = qc.names,modules = c("all")))
+  
+  mean_quality_perfile = qc_read_collection$per_base_sequence_quality %>% select(c('sample','Mean')) %>% group_by(sample) %>% summarise(mean_quality= mean(Mean))
+  
+  mean_quality_perfile$mean_quality = signif(mean_quality_perfile$mean_quality,4)
+  
+  qc_stats = merge(qc_stats,mean_quality_perfile)
+  
+  # metadata
+  if(!is.null(metadata.dir) & file.exists(metadata.dir)){
+    metadata = read_xlsx(metadata.dir)
+    rin = metadata %>% select(c(Nom...1,RIN))
+    colnames(rin)[1] = 'bio_sample'
+    qc_stats =  merge(qc_stats,rin)
+  }
+  
+  return(list(qc_stats,qc_summary,qc_read_collection))
 }
 ```
 
@@ -104,17 +130,19 @@ print(params)
 
 # Running FastQC functions
 ```{r, tables,message = T, eval = T, echo = T, timehook = T}
-fastqc_statitics= fastqcr_wrapper(fq.dir = params$fq.dir,
+fastqc_statistics= fastqcr_wrapper(fq.dir = params$fq.dir,
                 qc.dir = params$qc.dir,
                 threads = params$threads,
-                fastqc.path = params$fastqc.path)
+                fastqc.path = params$fastqc.path,
+                metadata = params$metadata)
 ```
 
 # Summary table
   * Listing statistics for each .fastq file
 ```{r, summary_tables,echo = F}
+  
   #datatable 
-  datatable(fastqc_statitics[[2]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics"), style="color:darkred"))
+  datatable(fastqc_statistics[[1]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics"), style="color:darkred"))
 ``` 
 
 
@@ -122,21 +150,15 @@ fastqc_statitics= fastqcr_wrapper(fq.dir = params$fq.dir,
   * Listing summary statistics for the whole cohort
 ```{r, summary_detailed,echo = F}
   #datatable
-  datatable(fastqc_statitics[[1]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics (detailed)"), style="color:darkred"))
+  datatable(fastqc_statistics[[2]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics (detailed)"), style="color:darkred"))
 ```
 
 
 # QC Plots
  * A few plots that might be worth looking at (but remember that we have all individual plots).
 ```{r, plots,timehook =T, echo=F}
-qc.files <- list.files(params$qc.dir,pattern = '.zip', full.names = TRUE)
-qc.names = gsub("_fastqc.zip","",list.files(params$qc.dir,pattern = '.zip', full.names = F))
-nb_samples <- length(qc.files)
-modules = c("all")
-
-qc_read_collection <- suppressMessages(qc_read_collection(qc.files, sample_names = qc.names,modules = modules))
-
 # Plot per sequence GC content
+qc_read_collection = fastqc_statistics[[3]]
 qc_plot_collection(qc_read_collection, "Per sequence GC content")
 
 # Per base sequence quality

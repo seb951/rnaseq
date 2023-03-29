@@ -191,14 +191,18 @@ qc_plot_collection(qc_read_collection, "Per sequence quality scores")
 qc_plot_collection(qc_read_collection, "Overrepresented sequences")
 
 # Adapter content
+if(is.numeric(qc_read_collection$adapter_content$Position)==F) {
 newmean_position = c(1:length(qc_read_collection$adapter_content$Position))[regexpr('-',qc_read_collection$adapter_content$Position,fixed = T)>0]
-
 means = strsplit(qc_read_collection$adapter_content$Position[newmean_position],'-')
 means = sapply(means,function(x) mean(as.numeric(x)))
 qc_read_collection$adapter_content$new_position = ''
 qc_read_collection$adapter_content$new_position[newmean_position] = means
 qc_read_collection$adapter_content$new_position[-newmean_position] = qc_read_collection$adapter_content$Position[-newmean_position]
 qc_read_collection$adapter_content$new_position = as.numeric(qc_read_collection$adapter_content$new_position)
+}
+if(is.numeric(qc_read_collection$adapter_content$Position)==T) {
+  qc_read_collection$adapter_content$new_position = qc_read_collection$adapter_content$Position
+}
 
 adapter_data = qc_read_collection$adapter_content[,-2] %>% pivot_longer(cols = !c(sample,new_position))
 

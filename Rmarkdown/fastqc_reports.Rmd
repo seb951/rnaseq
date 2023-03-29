@@ -11,6 +11,7 @@ params:
   threads: 12
   fastqc.path: 'C:/Program\ Files/FastQC/fastqc' 
   metadata: 'C:/Users/renseb01/Documents/rnaseq/data/librairies_1_a_70_et_RIN.xlsx'
+  adapters.dir: NULL
 ---
 
 
@@ -43,23 +44,39 @@ library(fastqcr)
 library(DT)
 library(readxl)
 library(dplyr)
+library(ggplot2)
+library(tidyr)
 ```
 
 ```{r, functions,echo = F}
 ###hack for windows
-fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "") 
+fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "", adapters.dir = NULL) 
 {
   fq.dir = sub('C:','/mnt/c',fq.dir)
   qc.dir = sub('C:','/mnt/c',qc.dir)
+  adapters.dir = sub('C:','/mnt/c',adapters.dir)
   fastqc.path = sub('C:','wsl.exe /mnt/c',fastqc.path)
 
   if (is.null(qc.dir)) 
     qc.dir <- file.path(fq.dir, "FASTQC")
   #.create_dir(qc.dir)
   cmd <- paste0(fastqc.path, " ", fq.dir, "/*  --threads ", 
-                threads, " --outdir ", qc.dir)
+                threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
   system(cmd)
 }
+
+####
+fastqc2 = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "", adapters.dir = NULL) 
+{
+    if (is.null(qc.dir)) 
+        qc.dir <- file.path(fq.dir, "FASTQC")
+    #.create_dir(qc.dir)
+    cmd <- paste0(fastqc.path, " ", fq.dir, "/*  --threads ", 
+        threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
+    system(cmd)
+}
+
+
 
 
 
@@ -67,17 +84,19 @@ fastqcr_wrapper = function(fq.dir = 'path',
                            qc.dir = 'path', 
                            threads = 8,
                            fastqc.path = 'path',
-                           metadata.dir = NULL){
+                           metadata.dir = NULL,
+                           adapters.dir = NULL){
   
   if(Sys.info()['sysname'] != 'Windows') {
-    fastqc(qc.dir = qc.dir ,fq.dir= fq.dir,threads= threads,fastqc.path= fastqc.path)}
+    fastqc2(qc.dir = qc.dir ,fq.dir = fq.dir,threads = threads,fastqc.path = fastqc.path, adapters.dir = adapters.dir)}
   
   if(Sys.info()['sysname'] == 'Windows') {
     message('waning: Running a modified version of fastqc() for Windows');
     fastqc_windows(qc.dir = qc.dir,
                    fq.dir = fq.dir,
                    threads = threads,
-                   fastqc.path = fastqc.path)}
+                   fastqc.path = fastqc.path,
+                   adapters.dir = adapters.dir)}
   
   
   #zip the whole thing
@@ -134,7 +153,8 @@ fastqc_statistics= fastqcr_wrapper(fq.dir = params$fq.dir,
                 qc.dir = params$qc.dir,
                 threads = params$threads,
                 fastqc.path = params$fastqc.path,
-                metadata = params$metadata)
+                metadata = params$metadata,
+                adapters.dir = params$adapters.dir)
 ```
 
 # Summary table
@@ -156,7 +176,7 @@ fastqc_statistics= fastqcr_wrapper(fq.dir = params$fq.dir,
 
 # QC Plots
  * A few plots that might be worth looking at (but remember that we have all individual plots).
-```{r, plots,timehook =T, echo=F}
+```{r, plots,timehook =T, echo=T}
 # Plot per sequence GC content
 qc_read_collection = fastqc_statistics[[3]]
 qc_plot_collection(qc_read_collection, "Per sequence GC content")
@@ -166,4 +186,27 @@ qc_plot_collection(qc_read_collection, "Per base sequence quality")
 
 # Per sequence quality scores
 qc_plot_collection(qc_read_collection, "Per sequence quality scores")
+
+# Overrepresented sequences
+qc_plot_collection(qc_read_collection, "Overrepresented sequences")
+
+# Adapter content
+newmean_position = c(1:length(qc_read_collection$adapter_content$Position))[regexpr('-',qc_read_collection$adapter_content$Position,fixed = T)>0]
+
+means = strsplit(qc_read_collection$adapter_content$Position[newmean_position],'-')
+means = sapply(means,function(x) mean(as.numeric(x)))
+qc_read_collection$adapter_content$new_position = ''
+qc_read_collection$adapter_content$new_position[newmean_position] = means
+qc_read_collection$adapter_content$new_position[-newmean_position] = qc_read_collection$adapter_content$Position[-newmean_position]
+qc_read_collection$adapter_content$new_position = as.numeric(qc_read_collection$adapter_content$new_position)
+
+adapter_data = qc_read_collection$adapter_content[,-2] %>% pivot_longer(cols = !c(sample,new_position))
+
+adapter_data %>%
+  ggplot( aes(x=new_position, y=value, group=sample, color=sample)) +
+    geom_line() +
+    ylim(0, 100) + ylab('percentage') + ggtitle('adapter (all) content')
+
+
+
 ```

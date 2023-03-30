@@ -100,7 +100,7 @@ fastqcr_wrapper = function(fq.dir = 'path',
   
   
   #zip the whole thing
-  zip = paste0('zip ',file.path(fq.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
+  zip = paste0('zip ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
   system(zip)
   
   message(paste0(Sys.time(),

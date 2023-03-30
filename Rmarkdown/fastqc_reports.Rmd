@@ -6,7 +6,7 @@ output:
   html_document:
     number_sections: T
 params:
-  fq.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastq'
+  fq.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastq2'
   qc.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastqc_results'
   threads: 12
   fastqc.path: 'C:/Program\ Files/FastQC/fastqc' 
@@ -110,6 +110,7 @@ fastqcr_wrapper = function(fq.dir = 'path',
   #aggregate results
   qc = suppressMessages(qc_aggregate(qc.dir = qc.dir, progressbar = F))
   
+  
   # Generates a summary of qc_aggregate
   qc_summary = summary(qc)
   
@@ -118,15 +119,16 @@ fastqcr_wrapper = function(fq.dir = 'path',
   qc_stats$ends = sapply(strsplit(qc_stats$sample,split = '_'),tail, 1)
   qc_stats$bio_sample = gsub('_R[12]','',qc_stats$sample)
   
+  
+  #fix (shorten) names
+  if(length(grep('i5.',qc_stats$bio_sample[1]))==1) {
+    qc_stats$bio_sample = sapply(strsplit(qc_stats$bio_sample,split ='i5.',fixed = T),"[[", 2)
+  }
+  
   #qc_read_collection
   qc.files <- list.files(qc.dir,pattern = '.zip', full.names = TRUE)
   qc.names = gsub("_fastqc.zip","",list.files(qc.dir,pattern = '.zip',full.names = F))
-  
-  #fix (shorten) names
-  if(length(grep('i5.',qc.names[1]))==1) {
-    qc.names = sapply(strsplit(qc.names,split ='i5.',fixed = T),"[[", 2)
-  }
-  
+
   qc_read_collection <- suppressMessages(qc_read_collection(qc.files,sample_names = qc.names,modules = c("all")))
   
   mean_quality_perfile = qc_read_collection$per_base_sequence_quality %>% select(c('sample','Mean')) %>% group_by(sample) %>% summarise(mean_quality= mean(Mean))
@@ -181,7 +183,7 @@ fastqc_statistics= fastqcr_wrapper(fq.dir = params$fq.dir,
 
 # QC Plots
  * A few plots that might be worth looking at (but remember that we have all individual plots).
-```{r, plots,timehook =T, echo=T}
+```{r, plots,timehook =T,fig.width = 11, echo=T}
 # Plot per sequence GC content
 qc_read_collection = fastqc_statistics[[3]]
 qc_plot_collection(qc_read_collection, "Per sequence GC content")

@@ -39,7 +39,7 @@ knitr::knit_hooks$set(timehook = local({
 }))
 ``` 
 
-```{r, requirements,echo=TRUE,message =FALSE}
+```{r, requirements,echo=TRUE,message =FALSE,warning =F}
 library(fastqcr)
 library(DT)
 library(readxl)
@@ -87,18 +87,19 @@ fastqcr_wrapper = function(fq.dir = 'path',
                            fastqc.path = 'path',
                            metadata.dir = NULL,
                            adapters.dir = NULL){
-  
-  if(Sys.info()['sysname'] != 'Windows') {
+ 
+ if(length(list.files(qc.dir))==0) {
+   if(Sys.info()['sysname'] != 'Windows') {
     fastqc2(qc.dir = qc.dir ,fq.dir = fq.dir,threads = threads,fastqc.path = fastqc.path, adapters.dir = adapters.dir)}
   
-  if(Sys.info()['sysname'] == 'Windows') {
+    if(Sys.info()['sysname'] == 'Windows') {
     message('waning: Running a modified version of fastqc() for Windows');
     fastqc_windows(qc.dir = qc.dir,
                    fq.dir = fq.dir,
                    threads = threads,
                    fastqc.path = fastqc.path,
                    adapters.dir = adapters.dir)}
-  
+ } else {message(paste0('Directory ',qc.dir, 'is  not empty. Will not run fastqc and assume that it has already run.'))}
   
   #zip the whole thing
   zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))

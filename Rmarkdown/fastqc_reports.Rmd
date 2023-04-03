@@ -46,6 +46,7 @@ library(readxl)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(plotly)
 ```
 
 ```{r, functions,echo = F}
@@ -100,8 +101,8 @@ fastqcr_wrapper = function(fq.dir = 'path',
   
   
   #zip the whole thing
-  zip = paste0('zip ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
-  system(zip)
+  zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
+  system(zip_cmd)
   
   message(paste0(Sys.time(),
                  '--- Zip archive is stored here: ',
@@ -186,16 +187,16 @@ fastqc_statistics= fastqcr_wrapper(fq.dir = params$fq.dir,
 ```{r, plots,timehook =T,fig.width = 11, echo=T}
 # Plot per sequence GC content
 qc_read_collection = fastqc_statistics[[3]]
-qc_plot_collection(qc_read_collection, "Per sequence GC content")
+ggplotly(qc_plot_collection(qc_read_collection, "Per sequence GC content"))
 
 # Per base sequence quality
-qc_plot_collection(qc_read_collection, "Per base sequence quality")
+ggplotly(qc_plot_collection(qc_read_collection, "Per base sequence quality"))
 
 # Per sequence quality scores
-qc_plot_collection(qc_read_collection, "Per sequence quality scores")
+ggplotly(qc_plot_collection(qc_read_collection, "Per sequence quality scores"))
 
 # Overrepresented sequences
-qc_plot_collection(qc_read_collection, "Overrepresented sequences")
+ggplotly(qc_plot_collection(qc_read_collection, "Overrepresented sequences"))
 
 # Adapter content
 if(is.numeric(qc_read_collection$adapter_content$Position)==F) {
@@ -213,11 +214,11 @@ if(is.numeric(qc_read_collection$adapter_content$Position)==T) {
 
 adapter_data = qc_read_collection$adapter_content[,-2] %>% pivot_longer(cols = !c(sample,new_position))
 
-adapter_data %>%
+adapter_plot = adapter_data %>%
   ggplot( aes(x=new_position, y=value, group=sample, color=sample)) +
     geom_line() +
     ylim(0, 100) + ylab('percentage') + ggtitle('adapter (all) content')
 
-
+ggplotly(adapter_plot)
 
 ```

@@ -16,7 +16,7 @@ sequences = function(fq.dir=params$fq.dir,
 
   
   R1_trim = paste0(file.path(sub('C:','/mnt/c',trim.dir),sample_names),'_R1_val_1.fq.gz')
-  R2_trim = paste0(file.path(sub('C:','/mnt/c',trim.dir),sample_names),'_R1_val_1.fq.gz')
+  R2_trim = paste0(file.path(sub('C:','/mnt/c',trim.dir),sample_names),'_R2_val_2.fq.gz')
   
   return(list(R1,R2,R1_trim,R2_trim))
 }
@@ -54,7 +54,7 @@ return('Done Trimming')
 #Prepare genome: note that STAR is Unix-based)
 #genome (fasta, gff downloaded from here: https://www.gencodegenes.org/human/)
 generate_genome = function(genomefasta = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1.fa',
-                           genomegtf = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
+                           annotation.gtf = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
                            genomedir = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1_index'){
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
                 'STAR --runThreadN 6 --runMode genomeGenerate --genomeDir ',
@@ -62,7 +62,7 @@ generate_genome = function(genomefasta = 'C:/Users/renseb01/Documents/rnaseq/dat
                ' --genomeFastaFiles ',
                sub('C:','/mnt/c',genomefasta),
                ' --sjdbGTFfile ',
-               sub('C:','/mnt/c',genomegtf),
+               sub('C:','/mnt/c',annotation.gtf),
                ' --sjdbOverhang 99 1>>star_aligner.out 2>>star_aligner.err')
   
   message(cmd)
@@ -74,9 +74,10 @@ generate_genome = function(genomefasta = 'C:/Users/renseb01/Documents/rnaseq/dat
 #Mapping step (note that star is Unix-based)
 mapping = function(genomedir = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1_index/',
                    threads = 12,
-                   R1_trim = sequences()[[1]][3],
-                   R2_trim = sequences()[[1]][4],
-                   annotation.gtf = 'gencode.v38.annotation.gtf') {
+                   R1_trim = sequences()[[3]][1],
+                   R2_trim = sequences()[[4]][1],
+                   annotation.gtf = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
+                   out_prefix = 'rnaseq/out/toto_') {
   
   #generate genome if its not there.
   if(length(list.files(genomedir,''))==0) generate_genome(genomedir = genomedir)
@@ -84,15 +85,15 @@ mapping = function(genomedir = 'C:/Users/renseb01/Documents/rnaseq/data/referenc
   
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'STAR --genomeDir ',
                sub('C:','/mnt/c',genomedir),
-               '--readFilesCommand zcat --readFilesIn ',
+               ' --readFilesCommand zcat --readFilesIn ',
                R1_trim,
                ' ',
                R2_trim,
-               '--outSAMtype BAM SortedByCoordinate --outReadsUnmapped Fastx --twopassMode Basic --twopass1readsN -1 --quantMode GeneCounts --sjdbGTFfile ',
-               annotation.gtf,
+               ' --outSAMtype BAM SortedByCoordinate --outReadsUnmapped Fastx --twopassMode Basic --twopass1readsN -1 --quantMode GeneCounts --sjdbGTFfile ',
+               sub('C:','/mnt/c',annotation.gtf),
                ' --runThreadN ',
                threads ,
-               '--outFileNamePrefix toto')
+               ' --outFileNamePrefix', out_prefix)
   
   message(cmd)
   system(cmd)
@@ -103,13 +104,18 @@ mapping = function(genomedir = 'C:/Users/renseb01/Documents/rnaseq/data/referenc
 #======================
 #  Bam to sam
 #=====================
-bamtosam = function(){
+bamtosam = function(out_prefix = 'rnaseq/out/toto_',
+                    bam = paste0(out_prefix,'Aligned.sortedByCoord.out.bam'),
+                    bam_out = paste0(out_prefix,'trimmed_Aligned_PP_UM.bam')){
 
-  cmd1=paste0('samtools view -h -f 0x0002 /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_Aligned.sortedByCoord.out.bam |  grep -P "^@|NH:i:1\t" | samtools view -h -b -  > /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM.bam')
-  cmd2=paste0('samtools view -h -o /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM.sam /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM.bam')
+  cmd1=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -f 0x0002 ",bam," |  grep -P '^@|NH:i:1\t' | samtools view -h -b -  >",bam2)
+  cmd2=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -o",gsub(".bam",".sam",bam_out)," ",bam_out)
 
   system(cmd1)
   system(cmd2)
+  
+  message(cmd1)
+  message(cmd2)
   
   return('samtools bamtosam done')
 }
@@ -119,18 +125,36 @@ bamtosam = function(){
 # duplicates & create 
 # index
 #======================
-java -Xmx20000m -jar 
-/lustre03/project/6032391/GROUP/bin/picard-2.20.0/picard/build/libs/picard.jar \
-AddOrReplaceReadGroups \
-I=/Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM.sam O=/Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded.bam \
-SO=coordinate \
-RGID=806rcbc2881 \
-RGLB=806rcbc2881 \
-RGPL=illumina \
-RGPU=1 \
-RGSM=806rcbc2881 \
-java -Xmx20000m -jar /lustre03/project/6032391/GROUP/bin/picard-2.20.0/picard/build/libs/picard.jar MarkDuplicates I=/Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded.bam O=/Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup.bam CREATE_INDEX=TRUE VALIDATION_STRINGENCY=SILENT M=/Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_metrics.txt 
-
+picardtools = function(out_prefix = 'rnaseq/out/toto_',
+                    bam_out = paste0(out_prefix,'trimmed_Aligned_PP_UM.bam'),
+                    bam_added = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded.bam'),
+                    bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
+                    metrics = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_metrics.txt')){
+  
+  cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
+                'PicardCommandLine AddOrReplaceReadGroups -I ',
+                gsub(".bam",".sam",bam_out),
+                ' -O ',
+                bam_added,
+                ' -SO coordinate -RGID toto_ -RGLB toto_ -RGPL illumina -RGPU 1 -RGSM toto_')
+  
+  
+  cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
+                'PicardCommandLine MarkDuplicates -I ',
+                bam_added,
+                ' -O ',
+                bam_rmdup,
+                ' -CREATE_INDEX TRUE -VALIDATION_STRINGENCY SILENT -M ',
+                metrics)
+  
+  
+  message(cmd1)
+  message(cmd2)
+  
+  system(cmd1)
+  system(cmd2)
+  return('picard tools MarkDuplicates done')
+}
 
 #======================
 # splitNtrim & reassign
@@ -144,23 +168,61 @@ java -Xmx20000m -jar /lustre03/project/6032391/GROUP/bin/picard-2.20.0/picard/bu
 #======================
 # sort cleaned bam remove unmapped reads   sort bam by name 
 #======================
-samtools sort -o /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP.bam /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split.bam
-samtools view -b -F 4 /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP.bam > /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP_noUnmapped.bam
-samtools index /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP_noUnmapped.bam
-samtools sort -n -o /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP_noUnmapped.bam
-
-
-
+sort_bam_by_name = function (bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
+                             bam_sort =  paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP.bam'),
+                             bam_nounmapped = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP_noUnmapped.bam'),
+                             bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'))
+                             {
+  sort_noGATK = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools sort -o ",bam_sort,' ',bam_rmdup)
+  view = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -b -F 4 ",bam_sort,' >',bam_nounmapped)
+  index =  paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools index ",bam_nounmapped)
+  resort = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools sort -n -o ",bam_nounmapped_sort," ",bam_nounmapped)
+  
+  system(sort_noGATK)
+  system(view)
+  system(index)
+  system(resort)
+  
+  message(sort_noGATK)
+  message(view)
+  message(index)
+  message(resort)
+  
+  return('Done sort_bam_by_name')
+}
+  
 
 
 #======================
 # htseq-count step 
 #======================
-cd /Users/jerry/Documents/IUCPQ/rnaseq/src/htseq_count
+#======================
+htseq_count = function (bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'),
+                                                     annotation.gtf = 'C:/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
+                                                     htseq_fwd = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_fwd.txt'),
+                                                     htseq_reverse = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_reverse.txt'),
+                                                     htseq_onstranded = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_unstranded.txt'))
+                        {
+  
+  
+  htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id ',bam_nounmapped_sort,' ', sub('C:','/mnt/c',annotation.gtf), ' >',htseq_fwd)
+  htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ', sub('C:','/mnt/c',annotation.gtf), ' >',htseq_reverse)
+  htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ', sub('C:','/mnt/c',annotation.gtf), ' >',htseq_onstranded)
 
-/lustre03/project/6032391/GROUP/Programs/python_virtualenv/bin/htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam /lustre03/project/6032391/GROUP/References/GRCh38/gencode.v38.annotation.gtf > /Users/jerry/Documents/IUCPQ/rnaseq/src/htseq_count/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_fwd.txt
+  
+  system(htseq1)
+  system(htseq2)
+  system(htseq3)
+  
+  message(htseq1)
+  message(htseq2)
+  message(htseq3)
+  
+return('Done htseq')
+}
 
-/lustre03/project/6032391/GROUP/Programs/python_virtualenv/bin/htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam /lustre03/project/6032391/GROUP/References/GRCh38/gencode.v38.annotation.gtf > /Users/jerry/Documents/IUCPQ/rnaseq/src/htseq_count/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_reverse.txt
 
-/lustre03/project/6032391/GROUP/Programs/python_virtualenv/bin/htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id /Users/jerry/Documents/IUCPQ/rnaseq/src/star/806rcbc2881/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam /lustre03/project/6032391/GROUP/References/GRCh38/gencode.v38.annotation.gtf > /Users/jerry/Documents/IUCPQ/rnaseq/src/htseq_count/806rcbc2881_trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_unstranded.txt
+
+
+
 

@@ -3,8 +3,8 @@
 #=====================
 ###get sequences ready
 #=====================
-sequences = function(fq.dir='/mnt/c/Users/renseb01/Documents/rnaseq/data/fastq',
-                     trim.dir='/mnt/c/Users/renseb01/Documents/rnaseq/out/fastq.trim') {
+sequences = function(fq.dir='data/fastq',
+                     trim.dir='out/fastq.trim') {
   R12 = list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),fq.dir),pattern = 'R[12].fastq.gz')
   sample_names = unique(gsub('_R[12].fastq.gz','',R12))
   
@@ -15,20 +15,23 @@ sequences = function(fq.dir='/mnt/c/Users/renseb01/Documents/rnaseq/data/fastq',
   R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
   R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
   
+  message(paste0('Done listing sequences, Time is: ',Sys.time()))
+  
   return(list(R1,R2,R1_trim,R2_trim,sample_names))
 }
 
 #=====================
 ###trimming
 #=====================
-trimming = function(trim.dir = '/mnt/c/Users/renseb01/Documents/rnaseq/out/fastq.trim',
+trimming = function(trim.dir = 'out/fastq.trim',
                     R1 = sequences()[[1]][1],
                     R2 = sequences()[[2]][1],
+                    out_seq = sequences()[[4]][1],
                     adaptor1='AGATCGGAAGAGCACACGTCTGAACTCCAGTCA',
                     adaptor2='AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT',
                     cutadapt = '/usr/bin/cutadapt') {
   
-  if(file.exists(trim.dir)==F) dir.create(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),trim.dir))
+  if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),trim.dir))==F) dir.create(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),trim.dir))
 
  
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
@@ -41,42 +44,47 @@ trimming = function(trim.dir = '/mnt/c/Users/renseb01/Documents/rnaseq/out/fastq
                ' --path_to_cutadapt ',
                cutadapt, ' 1>>trim_galore.out 2>>trim_galore.err')
   
-  message(cmd)
-  system(cmd)
-
-return('Done Trimming')
+  if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out_seq))==F) {system(cmd)} else {message('NOT RUNNNING trimming(): TRIM SEQUENCES ALREADY PRESENT')}
+  
+  message(paste0('Done Trimming, Time is: ',Sys.time()))
+  
+  return('')
 }
 
 
 #=====================
 #Prepare genome (fasta, gff downloaded from here: https://www.gencodegenes.org/human/)
 #=====================
-.generate_genome = function(genomefasta = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1.fa',
-                           annotation.gtf = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
-                           genomedir = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1_index'){
+.generate_genome = function(genomefasta = 'data/reference_genome/chr1.fa',
+                           annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
+                           genomedir = 'data/reference_genome/chr1_index'){
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
-                'STAR --runThreadN 6 --runMode genomeGenerate --genomeDir ',
+                'STAR --runThreadN 12 --runMode genomeGenerate --genomeDir ',
                genomedir,
                ' --genomeFastaFiles ',
                genomefasta,
                ' --sjdbGTFfile ',
                annotation.gtf,
-               ' --sjdbOverhang 99 1>>star_aligner.out 2>>star_aligner.err')
+               ' --sjdbOverhang 99')
   
-  message(cmd)
   system(cmd)
-  return('Done generate_genome')
+  
+  #message(cmd)
+  
+  message(paste0('Done generate_genome, Time is: ',Sys.time()))
+  
+  return('')
 }
 
 #=====================
 #Mapping step
 #=====================
-mapping = function(genomedir = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1_index/',
-                   genomefasta = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/chr1.fa',
+mapping = function(genomedir = 'data/reference_genome/chr1_index/',
+                   genomefasta = 'data/reference_genome/chr1.fa',
                    threads = 12,
                    R1_trim = sequences()[[3]][1],
                    R2_trim = sequences()[[4]][1],
-                   annotation.gtf = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
+                   annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
                    out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_')) {
   
   #generate genome if its not there.
@@ -93,11 +101,15 @@ mapping = function(genomedir = '/mnt/c/Users/renseb01/Documents/rnaseq/data/refe
                annotation.gtf,
                ' --runThreadN ',
                threads ,
-               ' --outFileNamePrefix ', out_prefix)
+               ' --outFileNamePrefix ', out_prefix,' 1>>star_aligner.out 2>>star_aligner.err')
   
-  message(cmd)
   system(cmd)
-  return('STAR done')
+
+  #message(cmd)
+  
+  message(paste0('Done STAR, Time is: ',Sys.time()))
+  
+  return('')
 }
 
 
@@ -114,10 +126,12 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
   system(cmd1)
   system(cmd2)
   
-  message(cmd1)
-  message(cmd2)
+  #message(cmd1)
+  #message(cmd2)
   
-  return('samtools bamtosam done')
+  message(paste0('Done samtools bamtosam, Time is: ',Sys.time()))
+  
+  return('')
 }
 
 #======================
@@ -126,18 +140,19 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
 # index
 #======================
 picardtools = function(out_prefix = 'rnaseq/out/toto_',
-                       out_prefix_nopath = 'toto_',
                        bam_out = paste0(out_prefix,'trimmed_Aligned_PP_UM.bam'),
-                      bam_added = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded.bam'),
-                      bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
-                     metrics = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_metrics.txt')){
+                       bam_added = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded.bam'),
+                       bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
+                       metrics = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_metrics.txt')){
+  
+  out_prefix_nopath = tail(strsplit(out_prefix,"/")[[1]],1)
   
   cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
                 'PicardCommandLine AddOrReplaceReadGroups -I ',
                 gsub(".bam",".sam",bam_out),
                 ' -O ',
                 bam_added,
-                ' -SO coordinate -RGID ',out_prefix_nopath,' -RGLB ',out_prefix_nopath,' -RGPL illumina -RGPU 1 -RGSM ',out_prefix_nopath)
+                ' -SO coordinate -RGID ',out_prefix_nopath,' -RGLB ',out_prefix_nopath,' -RGPL illumina -RGPU 1 -RGSM ',out_prefix_nopath,' 1>>picardtools.out 2>>picardtools.err')
   
   
   cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
@@ -146,15 +161,18 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
                 ' -O ',
                 bam_rmdup,
                 ' -CREATE_INDEX TRUE -VALIDATION_STRINGENCY SILENT -M ',
-                metrics)
+                metrics,' 1>>picardtools.out 2>>picardtools.err')
   
-  
-  message(cmd1)
-  message(cmd2)
   
   system(cmd1)
   system(cmd2)
-  return('picard tools MarkDuplicates done')
+  
+  #message(cmd1)
+  #message(cmd2)
+
+  message(paste0('Done picard tools MarkDuplicates, Time is: ',Sys.time()))
+  
+  return('')
 }
 
 #======================
@@ -185,12 +203,14 @@ sort_bam_by_name = function (out_prefix = 'rnaseq/out/toto_',
   system(index)
   system(resort)
   
-  message(sort_noGATK)
-  message(view)
-  message(index)
-  message(resort)
+  #message(sort_noGATK)
+  #message(view)
+  #message(index)
+  #message(resort)
   
-  return('Done sort_bam_by_name')
+  message(paste0('Done sort_bam_by_name, Time is: ',Sys.time()))
+  
+  return('')
 }
   
 
@@ -199,8 +219,8 @@ sort_bam_by_name = function (out_prefix = 'rnaseq/out/toto_',
 # htseq-count step 
 #======================
 htseq_count = function (
-    out_prefix = 'rnaseq/out/toto_',
-    annotation.gtf = '/mnt/c/Users/renseb01/Documents/rnaseq/data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
+    out_prefix = 'out/toto_',
+    annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
     bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'),
     htseq_fwd = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_fwd.txt'),
     htseq_reverse = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_reverse.txt'),
@@ -208,29 +228,91 @@ htseq_count = function (
                         {
   
   
-  htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_fwd)
-  htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse)
-  htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded)
+    htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_fwd,' 2>>htseq.err')
+    htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>>htseq.err')
+    htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>>htseq.err')
 
   
-  system(htseq1)
-  system(htseq2)
-  system(htseq3)
+    system(htseq1)
+    system(htseq2)
+    system(htseq3)
   
-  message(htseq1)
-  message(htseq2)
-  message(htseq3)
+  #  message(htseq1)
+  #  message(htseq2)
+  #  message(htseq3)
   
-return('Done htseq')
+  message(paste0('Done htseq, Time is: ',Sys.time()))  
+    
+  return('')
 }
 
 
 #======================
 # cleanup 
 #======================
-cleanup = function (out_prefix = 'rnaseq/out/toto_')
+cleanup = function (out_prefix = 'out/toto_')
   {
-  message('Nothing so far, but will need to empty the garbage eventually')
+  message(paste0('Done cleanup, will need to empty the garbage eventually, Time is: ',Sys.time()))
+  
+  return('')
+}
+
+
+#======================
+# wrapper 
+#======================
+rna_wrapper = function(fq.dir = params$fq.dir,
+                       trim.dir= params$trim.dir,
+                       genomedir = params$genomedir,
+                       annotation.gtf = params$annotation.gtf,
+                       genomefasta = params$genomefasta,
+                       out.dir = params$out.dir){
+  #fastq files
+  fastq_files = sequences(fq.dir = fq.dir,
+                          trim.dir = trim.dir)
+  
+  
+  for(i in seq_along(fastq_files[[5]])) {
+    
+    #out_prefix
+    out_prefix = paste0(out.dir,fastq_files[[5]][i],'_')
+    
+    #trimming
+    trimming(trim.dir = trim.dir,
+             R1 = fastq_files[[1]][i],
+             R2 = fastq_files[[2]][i],
+             out_seq = sequences()[[4]][i])
+    
+    
+    #mapping
+    mapping(genomedir = genomedir,
+            genomefasta = genomefasta,
+            threads = 12,
+           R1_trim = fastq_files[[3]][i],
+            R2_trim = fastq_files[[4]][i],
+            annotation.gtf = annotation.gtf,
+            out_prefix = out_prefix)
+    
+    
+    #bamtosam
+    bamtosam(out_prefix = out_prefix)
+    
+    #picardtools         
+    picardtools(out_prefix = out_prefix)
+    
+    #sortbam
+    sort_bam_by_name(out_prefix = out_prefix)
+    
+    #htseq
+    htseq_count(out_prefix = out_prefix,
+                annotation.gtf = annotation.gtf)
+    
+    #cleanup
+    cleanup(out_prefix = out_prefix)
+    
+    #message
+    message(paste0('--- Done sample, ',fastq_files[[5]][i],', Time is: ',Sys.time(),' ---'))
   }
+}
 
 

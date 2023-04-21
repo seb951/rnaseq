@@ -4,7 +4,8 @@
 ###get sequences ready
 #=====================
 sequences = function(fq.dir='data/fastq',
-                     trim.dir='out/fastq.trim') {
+                     trim.dir='out/fastq.trim',
+                     out.dir = 'out/') {
   R12 = list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),fq.dir),pattern = 'R[12].fastq.gz')
   sample_names = unique(gsub('_R[12].fastq.gz','',R12))
   
@@ -15,6 +16,11 @@ sequences = function(fq.dir='data/fastq',
   R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
   R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
   
+  
+  out.dir.length = length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out.dir))) 
+  
+  if(length(R12)==0) warning('It appears like your directory contains no .fastq.gz file',immediate. = TRUE)
+  if(out.dir.length>0) warning(paste0('It appears like your output directory ',out.dir,' already contains ',out.dir.length,' files. You may want to check it, because I will just add to it'),immediate. = TRUE)
   message(paste0('Done listing sequences, Time is: ',Sys.time()))
   
   return(list(R1,R2,R1_trim,R2_trim,sample_names))
@@ -59,7 +65,7 @@ trimming = function(trim.dir = 'out/fastq.trim',
                            annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
                            genomedir = 'data/reference_genome/chr1_index'){
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
-                'STAR --runThreadN 12 --runMode genomeGenerate --genomeDir ',
+                'STAR --genomeSAindexNbases 12 --runThreadN 12 --runMode genomeGenerate --genomeDir ',
                genomedir,
                ' --genomeFastaFiles ',
                genomefasta,
@@ -90,14 +96,14 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
   #generate genome if its not there.
   if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),genomedir)))==0) .generate_genome(genomedir = genomedir,genomefasta=genomefasta,annotation.gtf=annotation.gtf)
   
-  
+  #STAR cmd
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'STAR --genomeDir ',
                genomedir,
                ' --readFilesCommand zcat --readFilesIn ',
                R1_trim,
                ' ',
                R2_trim,
-               ' --outSAMtype BAM SortedByCoordinate --outReadsUnmapped Fastx --twopassMode Basic --twopass1readsN -1 --quantMode GeneCounts --sjdbGTFfile ',
+               ' --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 1 --outReadsUnmapped Fastx --quantMode GeneCounts --sjdbGTFfile ',
                annotation.gtf,
                ' --runThreadN ',
                threads ,
@@ -120,14 +126,14 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
                     bam = paste0(out_prefix,'Aligned.sortedByCoord.out.bam'),
                     bam_out = paste0(out_prefix,'trimmed_Aligned_PP_UM.bam')){
 
-  cmd1=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -f 0x0002 ",bam," |  grep -P '^@|NH:i:1\t' | samtools view -h -b -  >",bam_out)
-  cmd2=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -o",gsub(".bam",".sam",bam_out)," ",bam_out)
+  #cmd1=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -f 0x0002 ",bam," |  grep -P '^@|NH:i:1\t' | samtools view -h -b -  >",bam_out)
+  cmd2=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -o ",gsub(".bam",".sam",bam_out)," ",bam)
 
-  system(cmd1)
+  #system(cmd1)
   system(cmd2)
   
   #message(cmd1)
-  #message(cmd2)
+  message(cmd2)
   
   message(paste0('Done samtools bamtosam, Time is: ',Sys.time()))
   
@@ -269,10 +275,12 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                        out.dir = params$out.dir){
   #fastq files
   fastq_files = sequences(fq.dir = fq.dir,
-                          trim.dir = trim.dir)
+                          trim.dir = trim.dir,
+                          out.dir = out.dir)
   
   
-  for(i in seq_along(fastq_files[[5]])) {
+   for(i in seq_along(fastq_files[[5]])) {
+#  for(i in 1:2) {
     
     #out_prefix
     out_prefix = paste0(out.dir,fastq_files[[5]][i],'_')
@@ -281,14 +289,14 @@ rna_wrapper = function(fq.dir = params$fq.dir,
     trimming(trim.dir = trim.dir,
              R1 = fastq_files[[1]][i],
              R2 = fastq_files[[2]][i],
-             out_seq = sequences()[[4]][i])
+             out_seq = fastq_files[[4]][i])
     
     
     #mapping
     mapping(genomedir = genomedir,
             genomefasta = genomefasta,
             threads = 12,
-           R1_trim = fastq_files[[3]][i],
+            R1_trim = fastq_files[[3]][i],
             R2_trim = fastq_files[[4]][i],
             annotation.gtf = annotation.gtf,
             out_prefix = out_prefix)

@@ -25,7 +25,10 @@ option_list = list(
                help="output directory [default %default]", metavar="character"),
   
   make_option( "--cutadapt",type="character", default='/usr/bin/cutadapt', 
-               help="cutadapt directory [default %default]", metavar="character")
+               help="cutadapt directory [default %default]", metavar="character"),
+  
+  make_option( "--threads",type="integer", default=12, 
+               help="Nb of Threads to use [default %default]", metavar="character")
 
 ) 
 
@@ -41,6 +44,7 @@ rna_wrapper(fq.dir = params$fqdir,
                          annotation.gtf = params$annotationgtf,
                          genomefasta = params$genomefasta,
                          out.dir = params$outdir,
-                         cutadapt=params$cutadapt)
+                         cutadapt=params$cutadapt,
+                        threads= params$threads)
 
 

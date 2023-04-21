@@ -63,9 +63,10 @@ trimming = function(trim.dir = 'out/fastq.trim',
 #=====================
 .generate_genome = function(genomefasta = 'data/reference_genome/chr1.fa',
                            annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
-                           genomedir = 'data/reference_genome/chr1_index'){
+                           genomedir = 'data/reference_genome/chr1_index',
+                           threads = 12){
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
-                'STAR --genomeSAindexNbases 12 --runThreadN 12 --runMode genomeGenerate --genomeDir ',
+                'STAR --genomeSAindexNbases 12 --runThreadN ',threads,' --runMode genomeGenerate --genomeDir ',
                genomedir,
                ' --genomeFastaFiles ',
                genomefasta,
@@ -94,7 +95,10 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
                    out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_')) {
   
   #generate genome if its not there.
-  if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),genomedir)))==0) .generate_genome(genomedir = genomedir,genomefasta=genomefasta,annotation.gtf=annotation.gtf)
+  if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),genomedir)))==0) .generate_genome(genomedir = genomedir,
+                                                                                                                          genomefasta = genomefasta,
+                                                                                                                          annotation.gtf = annotation.gtf,
+                                                                                                                          threads = threads)
   
   #STAR cmd
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'STAR --genomeDir ',
@@ -133,7 +137,7 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
   system(cmd2)
   
   #message(cmd1)
-  message(cmd2)
+  #message(cmd2)
   
   message(paste0('Done samtools bamtosam, Time is: ',Sys.time()))
   
@@ -273,7 +277,8 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                        annotation.gtf = params$annotation.gtf,
                        genomefasta = params$genomefasta,
                        out.dir = params$out.dir,
-                       cutadapt = params$cutadapt){
+                       cutadapt = params$cutadapt,
+                       threads = params$threads){
   #fastq files
   fastq_files = sequences(fq.dir = fq.dir,
                           trim.dir = trim.dir,
@@ -297,7 +302,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
     #mapping
     mapping(genomedir = genomedir,
             genomefasta = genomefasta,
-            threads = 12,
+            threads = threads,
             R1_trim = fastq_files[[3]][i],
             R2_trim = fastq_files[[4]][i],
             annotation.gtf = annotation.gtf,

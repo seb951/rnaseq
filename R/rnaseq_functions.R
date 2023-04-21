@@ -272,7 +272,8 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                        genomedir = params$genomedir,
                        annotation.gtf = params$annotation.gtf,
                        genomefasta = params$genomefasta,
-                       out.dir = params$out.dir){
+                       out.dir = params$out.dir,
+                       cutadapt = params$cutadapt){
   #fastq files
   fastq_files = sequences(fq.dir = fq.dir,
                           trim.dir = trim.dir,
@@ -289,7 +290,8 @@ rna_wrapper = function(fq.dir = params$fq.dir,
     trimming(trim.dir = trim.dir,
              R1 = fastq_files[[1]][i],
              R2 = fastq_files[[2]][i],
-             out_seq = fastq_files[[4]][i])
+             out_seq = fastq_files[[4]][i],
+             cutadapt = cutadapt)
     
     
     #mapping

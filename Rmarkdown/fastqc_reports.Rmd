@@ -6,18 +6,18 @@ output:
   html_document:
     number_sections: T
 params:
-  fq.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastq2'
-  qc.dir: 'C:/Users/renseb01/Documents/rnaseq/data/fastqc_results'
+  fq.dir: 'data/fastq'
+  qc.dir: 'data/fastqc_results2'
   threads: 12
-  fastqc.path: 'C:/Program\ Files/FastQC/fastqc' 
-  metadata: 'C:/Users/renseb01/Documents/rnaseq/data/librairies_1_a_70_et_RIN.xlsx'
+  fastqc.path: 'fastqc' 
+  metadata: 'data/librairies_1_a_70_et_RIN.xlsx'
   adapters.dir: NULL
 ---
 
 
 # Introduction  
 * This is a fastQC report of raw sequences. I uses functions from `fastqcr`, which is itself a wrapper for [`fastqc`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-* You can knit this directly from `Rstudio` or you can create this document by running `Rscript -e "rmarkdown::render('fastqc_reports.Rmd',params = list())"` on a Linux/Unix machine. 
+* You can knit this directly from `Rstudio` or you can create this document by running `Rscript -e "rmarkdown::render('fastqc_reports.Rmd',render = list())"` on a Linux/Unix machine. 
 
 
  
@@ -37,6 +37,8 @@ knitr::knit_hooks$set(timehook = local({
     }
   }
 }))
+
+knitr::opts_knit$set(root.dir = '..')
 ``` 
 
 ```{r, requirements,echo=TRUE,message =FALSE,warning =F}
@@ -56,12 +58,12 @@ fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.
   fq.dir = sub('C:','/mnt/c',fq.dir)
   qc.dir = sub('C:','/mnt/c',qc.dir)
   adapters.dir = sub('C:','/mnt/c',adapters.dir)
-  fastqc.path = sub('C:','wsl.exe /mnt/c',fastqc.path)
+  fastqc.path = sub('C:','/mnt/c',fastqc.path)
 
   if (is.null(qc.dir)) 
     qc.dir <- file.path(fq.dir, "FASTQC")
   #.create_dir(qc.dir)
-  cmd <- paste0(fastqc.path, " ", fq.dir, "/*R1.fastq.gz ",fq.dir,"/*R2.fastq.gz --threads ", 
+  cmd <- paste0('wsl.exe ',fastqc.path, " ", fq.dir, "/*R1.fastq.gz ",fq.dir,"/*R2.fastq.gz --threads ", 
                 threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
   system(cmd)
 }
@@ -76,9 +78,6 @@ fastqc2 = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = 
         threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
     system(cmd)
 }
-
-
-
 
 
 fastqcr_wrapper = function(fq.dir = 'path',
@@ -99,7 +98,7 @@ fastqcr_wrapper = function(fq.dir = 'path',
                    threads = threads,
                    fastqc.path = fastqc.path,
                    adapters.dir = adapters.dir)}
- } else {message(paste0('Directory ',qc.dir, 'is  not empty. Will not run fastqc and assume that it has already run.'))}
+ } else {message(paste0('Directory ',qc.dir, ' is  not empty. Will not run fastqc and assume that it has already run.'))}
   
   #zip the whole thing
   zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
@@ -112,7 +111,6 @@ fastqcr_wrapper = function(fq.dir = 'path',
   #aggregate results
   qc = suppressMessages(qc_aggregate(qc.dir = qc.dir, progressbar = F))
   
-  
   # Generates a summary of qc_aggregate
   qc_summary = summary(qc)
   
@@ -120,7 +118,6 @@ fastqcr_wrapper = function(fq.dir = 'path',
   qc_stats = qc_stats(qc)
   qc_stats$ends = sapply(strsplit(qc_stats$sample,split = '_'),tail, 1)
   qc_stats$bio_sample = gsub('_R[12]','',qc_stats$sample)
-  
   
   #fix (shorten) names
   if(length(grep('i5.',qc_stats$bio_sample[1]))==1) {
@@ -158,11 +155,11 @@ print(params)
 
 # Running FastQC functions
 ```{r, tables,message = T, eval = T, echo = T, timehook = T}
-fastqc_statistics= fastqcr_wrapper(fq.dir = params$fq.dir,
-                qc.dir = params$qc.dir,
+fastqc_statistics= fastqcr_wrapper(fq.dir = file.path(getwd(),params$fq.dir),
+                qc.dir = file.path(getwd(),params$qc.dir),
                 threads = params$threads,
-                fastqc.path = params$fastqc.path,
-                metadata = params$metadata,
+                fastqc.path =params$fastqc.path,
+                metadata = file.path(getwd(),params$metadata),
                 adapters.dir = params$adapters.dir)
 ```
 

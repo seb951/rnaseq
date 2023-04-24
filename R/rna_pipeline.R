@@ -1,4 +1,4 @@
-library(optparse)
+suppressWarnings(library(optparse))
 source('R/rnaseq_functions.R')
 
 
@@ -28,23 +28,55 @@ option_list = list(
                help="cutadapt directory [default %default]", metavar="character"),
   
   make_option( "--threads",type="integer", default=12, 
-               help="Nb of Threads to use [default %default]", metavar="character")
+               help="Nb of Threads to use [default %default]", metavar="character"),
+  
+  ###QC specific inputs
+  make_option( "--qcdir",type="character", default='data/fatqc_results', 
+               help="QC argument: output directory [default %default]", metavar="character"),
+  
+  make_option( "--metadata",type="character", default='data/librairies_1_a_70_et_RIN.xlsx', 
+               help="QC argument: output directory [default %default]", metavar="character"),
+  
+  make_option( "--fastqc",type="character", default='fastqc', 
+               help="QC argument: fastqc location [default %default]", metavar="character")
+  ) 
 
-) 
+#
+parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
+arguments <- parse_args(parser, positional_arguments = 1)
 
-opt_parser = OptionParser(option_list=option_list)
+if(arguments$args == 'QC' | arguments$args != 'counts') {
+  sprintf("Running command ( %s )", arguments$args)
+  } else {
+         stop(sprintf("Specified command ( %s ) does not exist", arguments$args))
+  }
 
-params = parse_args(opt_parser)
 
 
-#running function
-rna_wrapper(fq.dir = params$fqdir,
-                         trim.dir= params$trimdir,
-                         genomedir = params$genomedir,
-                         annotation.gtf = params$annotationgtf,
-                         genomefasta = params$genomefasta,
-                         out.dir = params$outdir,
-                         cutadapt=params$cutadapt,
-                        threads= params$threads)
+#running rnaseq wrapper
+if(arguments$args == 'counts') {
+rna_wrapper(fq.dir = arguments$options$fqdir,
+                         trim.dir= arguments$options$trimdir,
+                         genomedir = arguments$options$genomedir,
+                         annotation.gtf = arguments$options$annotationgtf,
+                         genomefasta = arguments$options$genomefasta,
+                         out.dir = arguments$options$outdir,
+                         cutadapt=arguments$options$cutadapt,
+                         threads= arguments$options$threads)
+}
+
+#running QC notebook
+if(arguments$args == 'QC') {
+library(rmarkdown)
+rmarkdown::render('./Rmarkdown/fastqc_reports.Rmd',params = list(fq.dir = arguments$options$fqdir,
+                                                                 qc.dir = arguments$options$qcdir,
+                                                                 threads =  arguments$options$threads,
+                                                                 metadata = arguments$options$metadata,
+                                                                 fastqc.path = arguments$options$fastqc,
+                                                                 adapters.dir = NULL)
+                  )
+}
+
+
 
 

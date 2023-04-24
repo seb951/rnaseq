@@ -309,7 +309,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
              out_seq = fastq_files[[4]][i],
              cutadapt = cutadapt,
              i=i,
-             out.dir = params$out.dir)
+             out.dir = out.dir)
     
     
     #mapping
@@ -321,7 +321,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
             annotation.gtf = annotation.gtf,
             out_prefix = out_prefix,
             i = i,
-            out.dir = params$out.dir)
+            out.dir = out.dir)
     
     
     #bamtosam

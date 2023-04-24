@@ -31,21 +31,21 @@ option_list = list(
                help="Nb of Threads to use [default %default]", metavar="character"),
   
   ###QC specific inputs
-  make_option( "--qcdir",type="character", default='data/fatqc_results', 
+  make_option( "--qcdir",type="character", default='data/fastqc_results', 
                help="QC argument: output directory [default %default]", metavar="character"),
   
   make_option( "--metadata",type="character", default='data/librairies_1_a_70_et_RIN.xlsx', 
                help="QC argument: output directory [default %default]", metavar="character"),
   
-  make_option( "--fastqc",type="character", default='fastqc', 
-               help="QC argument: fastqc location [default %default]", metavar="character")
+  make_option( "--fastqc",type="character", default='data/fastqc', 
+               help="QC argument: where is fastqc installed [default %default]", metavar="character")
   ) 
 
 #
 parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
 arguments <- parse_args(parser, positional_arguments = 1)
 
-if(arguments$args == 'QC' | arguments$args != 'counts') {
+if(arguments$args == 'QC' | arguments$args == 'counts') {
   sprintf("Running command ( %s )", arguments$args)
   } else {
          stop(sprintf("Specified command ( %s ) does not exist", arguments$args))

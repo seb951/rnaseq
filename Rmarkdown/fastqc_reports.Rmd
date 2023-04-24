@@ -60,9 +60,8 @@ fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.
   adapters.dir = sub('C:','/mnt/c',adapters.dir)
   fastqc.path = sub('C:','/mnt/c',fastqc.path)
 
-  if (is.null(qc.dir)) 
-    qc.dir <- file.path(fq.dir, "FASTQC")
-  #.create_dir(qc.dir)
+  if (file.exists(qc.dir)==F) {dir.create(qc.dir)}
+  
   cmd <- paste0('wsl.exe ',fastqc.path, " ", fq.dir, "/*R1.fastq.gz ",fq.dir,"/*R2.fastq.gz --threads ", 
                 threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
   system(cmd)
@@ -71,9 +70,8 @@ fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.
 ####
 fastqc2 = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "", adapters.dir = NULL) 
 {
-    if (is.null(qc.dir)) 
-        qc.dir <- file.path(fq.dir, "FASTQC")
-    #.create_dir(qc.dir)
+    if (file.exists(qc.dir)==F) {dir.create(qc.dir)}
+  
     cmd <- paste0(fastqc.path, " ", fq.dir, "/*R1.fastq.gz ",fq.dir,"/*R2.fastq.gz --threads ", 
         threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
     system(cmd)

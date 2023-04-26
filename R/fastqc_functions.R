@@ -56,7 +56,7 @@ fastqc_wrapper = function(fq.dir = 'path',
   
   #zip the whole thing
   zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
-  if(file.exists(file.path(fq.dir,"../fastqc_individual_reports.zip"))==F) system(zip_cmd)
+  if(file.exists(file.path(qc.dir,"../fastqc_individual_reports.zip"))==F) system(zip_cmd)
   
   message(paste0(Sys.time(),
                  ' --- Zip archive is stored here: ',
@@ -99,6 +99,7 @@ fastqc_wrapper = function(fq.dir = 'path',
   }
   
   qc_stats$type = ifelse(regexpr('umeur',qc_stats$sample)>0,'Tumeur','Sain')
+  qc_stats$direction = ifelse(regexpr('_R1',qc_stats$sample)>0,'R1','R2')
   qc_stats$tot.seq =  as.numeric(qc_stats$tot.seq) / 1000000
   
   message(paste0(Sys.time(),' --- Done preparing QC data'))

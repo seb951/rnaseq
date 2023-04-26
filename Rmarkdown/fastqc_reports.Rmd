@@ -7,7 +7,7 @@ output:
     number_sections: T
 params:
   fq.dir: '../data/fastq'
-  qc.dir: '../data/fastqc_results2'
+  qc.dir: '../data/fastqc_results'
   threads: 12
   fastqc.path: 'fastqc' 
   metadata: '../data/librairies_1_a_70_et_RIN.xlsx'
@@ -84,19 +84,17 @@ fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
 
 # Summary Plots 
 ```{r, summary, fig.width = 9, fig.height=9,echo =F}
-
-
 rin_phred = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, y=RIN,col = type)) + 
-    geom_point( show.legend = FALSE)+
+    geom_point()+
     xlab("Mean quality per sample (Phred Score)") +
     ylab("RNA Integrity Number") 
 
 rin_nbreads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq, y=RIN,col = type)) + 
-    geom_point()+
+    geom_point( show.legend = FALSE)+
     xlab("Total Nb of Sequences (10e6)") +
     ylab("RNA Integrity Number") 
 
-hist_phred  = ggplot(fastqc_statistics[[1]], aes(x=mean_quality)) +
+hist_phred = ggplot(fastqc_statistics[[1]], aes(x=mean_quality)) +
     geom_histogram() + 
     xlab("Mean quality per sample (Phred Score)")
 
@@ -104,10 +102,10 @@ hist_reads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq)) +
     geom_histogram() + 
     xlab("Total Nb of Sequences (10e6)")
 
-rin_phred + rin_nbreads + hist_phred + hist_reads
+hist_reads + hist_phred + rin_nbreads +  rin_phred 
 
 pdf(file.path(params$qc.dir,'qc_plots.pdf'),width = 9,height = 7)
-rin_phred + rin_nbreads + hist_phred + hist_reads
+hist_reads + hist_phred + rin_nbreads +  rin_phred 
 dev.off()
 
 

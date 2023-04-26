@@ -52,9 +52,9 @@ trimming = function(trim.dir = 'out/fastq.trim',
                ' --path_to_cutadapt ',
                cutadapt, ' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/trim_galore.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/trim_galore.err')
   
-  if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out_seq))==F) {system(cmd)} else {message('NOT RUNNNING trimming(): TRIM SEQUENCES ALREADY PRESENT')}
+  if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out_seq))==F) {system(cmd);message(paste0('Done Trimming, Time is: ',Sys.time()))} else {message(paste0('Skipping Trimming, Time is: ',Sys.time()))}
   
-  message(paste0('Done Trimming, Time is: ',Sys.time()))
+  
   
   return('')
 }
@@ -268,7 +268,7 @@ htseq_count = function (
 #======================
 cleanup = function (out_prefix = 'out/toto_')
   {
-  message(paste0('Done cleanup, will need to empty the garbage eventually, Time is: ',Sys.time()))
+  message(paste0('Done cleanup (nothing yet), Time is: ',Sys.time()))
   
   return('')
 }

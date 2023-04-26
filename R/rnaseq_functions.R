@@ -105,13 +105,14 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
                                                                                                                           threads = threads)
   
   #STAR cmd
-  cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'STAR --genomeDir ',
+  cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'STAR --runMode alignReads --genomeDir ',
                genomedir,
-               ' --readFilesCommand zcat --readFilesIn ',
+               ' --readFilesCommand zcat --limitBAMsortRAM 100000000000 --readFilesIn ',
                R1_trim,
                ' ',
                R2_trim,
-               ' --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 1 --outReadsUnmapped Fastx --quantMode GeneCounts --sjdbGTFfile ',
+               ' --outSAMtype BAM SortedByCoordinate --sjdbOverhang 99
+--outFilterMultimapNmax 1 --outReadsUnmapped None --quantMode GeneCounts --sjdbGTFfile ',
                annotation.gtf,
                ' --runThreadN ',
                threads ,

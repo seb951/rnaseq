@@ -20,7 +20,7 @@ sequences = function(fq.dir='data/fastq',
   out.dir.length = length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out.dir))) 
   
   if(length(R12)==0) warning('It appears like your directory contains no .fastq.gz file',immediate. = TRUE)
-  if(out.dir.length>0) warning(paste0('It appears like your output directory ',out.dir,' already contains ',out.dir.length,' files. You may want to check it, because I will just add to it'),immediate. = TRUE)
+  if(out.dir.length>1) warning(paste0('It appears like your output directory ',out.dir,' already contains ',out.dir.length,' files. You may want to check it, because I will just add to it'),immediate. = TRUE)
   message(paste0('Done listing sequences, Time is: ',Sys.time()))
   
   return(list(R1,R2,R1_trim,R2_trim,sample_names))
@@ -50,7 +50,7 @@ trimming = function(trim.dir = 'out/fastq.trim',
                ' ',
                R2,
                ' --path_to_cutadapt ',
-               cutadapt, ' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'trim_galore.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'trim_galore.err')
+               cutadapt, ' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/trim_galore.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/trim_galore.err')
   
   if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out_seq))==F) {system(cmd)} else {message('NOT RUNNNING trimming(): TRIM SEQUENCES ALREADY PRESENT')}
   
@@ -115,11 +115,11 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
                annotation.gtf,
                ' --runThreadN ',
                threads ,
-               ' --outFileNamePrefix ', out_prefix,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'star_aligner.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'star_aligner.err')
+               ' --outFileNamePrefix ', out_prefix,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/star_aligner.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/star_aligner.err')
   
   system(cmd)
 
-  #message(cmd)
+ # message(cmd)
   
   message(paste0('Done STAR, Time is: ',Sys.time()))
   
@@ -141,7 +141,7 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
   system(cmd2)
   
   #message(cmd1)
-  #message(cmd2)
+ # message(cmd2)
   
   message(paste0('Done samtools bamtosam, Time is: ',Sys.time()))
   
@@ -168,7 +168,7 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
                 gsub(".bam",".sam",bam_out),
                 ' -O ',
                 bam_added,
-                ' -SO coordinate -RGID ',out_prefix_nopath,' -RGLB ',out_prefix_nopath,' -RGPL illumina -RGPU 1 -RGSM ',out_prefix_nopath,' 1>>picardtools.out 2>>picardtools.err')
+                ' -SO coordinate -RGID ',out_prefix_nopath,' -RGLB ',out_prefix_nopath,' -RGPL illumina -RGPU 1 -RGSM ',out_prefix_nopath,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/picardtools.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/picardtools.err')
   
   
   cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
@@ -177,14 +177,14 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
                 ' -O ',
                 bam_rmdup,
                 ' -CREATE_INDEX TRUE -VALIDATION_STRINGENCY SILENT -M ',
-                metrics,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'picardtools.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'>picardtools.err')
+                metrics,' 1>>',file.path(out.dir,'logs'),'/picardtools.out 2>>',file.path(out.dir,'logs'),'/picardtools.err')
   
   
   system(cmd1)
   system(cmd2)
   
-  #message(cmd1)
-  #message(cmd2)
+ # message(cmd1)
+#  message(cmd2)
 
   message(paste0('Done picard tools MarkDuplicates, Time is: ',Sys.time()))
   
@@ -206,7 +206,7 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
 sort_bam_by_name = function (out_prefix = 'rnaseq/out/toto_',
                              bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
                              bam_sort =  paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP.bam'),
-                             bam_nounmapped = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_sortP_noUnmapped.bam'),
+                             bam_nounmapped = paste0(out_prefix,     'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortP.bam'),
                              bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'))
                              {
   sort_noGATK = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools sort -o ",bam_sort,' ',bam_rmdup)
@@ -245,12 +245,10 @@ htseq_count = function (
     out.dir=out.dir)
                         {
   
-  
-    htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_fwd,' 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'htseq_yes.err')
-    htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'htseq_reverse.err')
-    htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs/'),'htseq_no.err')
+    htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_fwd,' 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/htseq.err')
+    htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
+    htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
 
-  
     system(htseq1)
     system(htseq2)
     system(htseq3)
@@ -288,6 +286,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                        cutadapt = params$cutadapt,
                        threads = params$threads){
   
+  dir.create(out.dir)
   dir.create(file.path(out.dir,'logs'))
   
   #fastq files

@@ -19,8 +19,6 @@ params:
 * This is a fastQC report of raw sequences. I uses functions from `fastqcr`, which is itself a wrapper for [`fastqc`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 * You can knit this directly from `Rstudio` or you can create this document by running `Rscript -e "rmarkdown::render('fastqc_reports.Rmd',render = list())"` on a Linux/Unix machine. 
 
-
- 
  
 ```{r, timehook,echo=F}
 knitr::knit_hooks$set(timehook = local({
@@ -38,7 +36,7 @@ knitr::knit_hooks$set(timehook = local({
   }
 }))
 
-knitr::opts_knit$set(root.dir = '..')
+#knitr::opts_knit$set(root.dir = '..')
 ``` 
 
 ```{r, requirements,echo=TRUE,message =FALSE,warning =F}
@@ -49,101 +47,8 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(plotly)
-```
-
-```{r, functions,echo = F}
-###hack for windows
-fastqc_windows = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "", adapters.dir = NULL) 
-{
-  fq.dir = sub('C:','/mnt/c',fq.dir)
-  qc.dir = sub('C:','/mnt/c',qc.dir)
-  adapters.dir = sub('C:','/mnt/c',adapters.dir)
-  fastqc.path = sub('C:','/mnt/c',fastqc.path)
-
-  if (file.exists(qc.dir)==F) {dir.create(qc.dir)}
-  
-  cmd <- paste0('wsl.exe ',fastqc.path, " ", fq.dir, "/*R1.fastq.gz ",fq.dir,"/*R2.fastq.gz --threads ", 
-                threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
-  system(cmd)
-}
-
-####
-fastqc2 = function (fq.dir = getwd(), qc.dir = NULL, threads = 8, fastqc.path = "", adapters.dir = NULL) 
-{
-    if (file.exists(qc.dir)==F) {dir.create(qc.dir)}
-  
-    cmd <- paste0(fastqc.path, " ", fq.dir, "/*R1.fastq.gz ",fq.dir,"/*R2.fastq.gz --threads ", 
-        threads, " --outdir ", qc.dir, ifelse(is.null(adapters.dir),"",paste0(' --adapters ',adapters.dir)))
-    system(cmd)
-}
-
-
-fastqcr_wrapper = function(fq.dir = 'path',
-                           qc.dir = 'path', 
-                           threads = 8,
-                           fastqc.path = 'path',
-                           metadata.dir = NULL,
-                           adapters.dir = NULL){
- 
- if(length(list.files(qc.dir))==0) {
-   if(Sys.info()['sysname'] != 'Windows') {
-    fastqc2(qc.dir = qc.dir ,fq.dir = fq.dir,threads = threads,fastqc.path = fastqc.path, adapters.dir = adapters.dir)}
-  
-    if(Sys.info()['sysname'] == 'Windows') {
-    message('waning: Running a modified version of fastqc() for Windows');
-    fastqc_windows(qc.dir = qc.dir,
-                   fq.dir = fq.dir,
-                   threads = threads,
-                   fastqc.path = fastqc.path,
-                   adapters.dir = adapters.dir)}
- } else {message(paste0('Directory ',qc.dir, ' is  not empty. Will not run fastqc and assume that it has already run.'))}
-  
-  #zip the whole thing
-  zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
-  system(zip_cmd)
-  
-  message(paste0(Sys.time(),
-                 '--- Zip archive is stored here: ',
-                 file.path(fq.dir,"../fastqc_individual_reports.zip")))
-
-  #aggregate results
-  qc = suppressMessages(qc_aggregate(qc.dir = qc.dir, progressbar = F))
-  
-  # Generates a summary of qc_aggregate
-  qc_summary = summary(qc)
-  
-  # General statistics of fastqc reports.
-  qc_stats = qc_stats(qc)
-  qc_stats$ends = sapply(strsplit(qc_stats$sample,split = '_'),tail, 1)
-  qc_stats$bio_sample = gsub('_R[12]','',qc_stats$sample)
-  
-  #fix (shorten) names
-  if(length(grep('i5.',qc_stats$bio_sample[1]))==1) {
-    qc_stats$bio_sample = sapply(strsplit(qc_stats$bio_sample,split ='i5.',fixed = T),"[[", 2)
-  }
-  
-  #qc_read_collection
-  qc.files <- list.files(qc.dir,pattern = '.zip', full.names = TRUE)
-  qc.names = gsub("_fastqc.zip","",list.files(qc.dir,pattern = '.zip',full.names = F))
-
-  qc_read_collection <- suppressMessages(qc_read_collection(qc.files,sample_names = qc.names,modules = c("all")))
-  
-  mean_quality_perfile = qc_read_collection$per_base_sequence_quality %>% select(c('sample','Mean')) %>% group_by(sample) %>% summarise(mean_quality= mean(Mean))
-  
-  mean_quality_perfile$mean_quality = signif(mean_quality_perfile$mean_quality,4)
-  
-  qc_stats = merge(qc_stats,mean_quality_perfile)
-  
-  # metadata
-  if(!is.null(metadata.dir) & file.exists(metadata.dir)){
-    metadata = read_xlsx(metadata.dir)
-    rin = metadata %>% select(c(Nom...1,RIN))
-    colnames(rin)[1] = 'bio_sample'
-    qc_stats =  merge(qc_stats,rin)
-  }
-  
-  return(list(qc_stats,qc_summary,qc_read_collection))
-}
+library(patchwork)
+source('../R/fastqc_functions.R')
 ```
 
 # FastQC parameters
@@ -153,11 +58,11 @@ print(params)
 
 # Running FastQC functions
 ```{r, tables,message = T, eval = T, echo = T, timehook = T}
-fastqc_statistics= fastqcr_wrapper(fq.dir = file.path(getwd(),params$fq.dir),
-                qc.dir = file.path(getwd(),params$qc.dir),
+fastqc_statistics= fastqc_wrapper(fq.dir = file.path(getwd(),'..',params$fq.dir),
+                qc.dir = file.path(getwd(),'..',params$qc.dir),
                 threads = params$threads,
                 fastqc.path =params$fastqc.path,
-                metadata = file.path(getwd(),params$metadata),
+                metadata.dir = file.path(getwd(),'..',params$metadata),
                 adapters.dir = params$adapters.dir)
 ```
 
@@ -177,10 +82,41 @@ fastqc_statistics= fastqcr_wrapper(fq.dir = file.path(getwd(),params$fq.dir),
   datatable(fastqc_statistics[[2]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics (detailed)"), style="color:darkred"))
 ```
 
+# Summary Plots 
+```{r, summary, fig.width = 9, fig.height=9,echo =F}
+
+
+rin_phred = ggplot(fastqc_statistics[[1]], aes(y=mean_quality, x=RIN,col = type)) + 
+    geom_point( show.legend = FALSE)+
+    ylab("Mean quality per sample (Phred Score)") +
+    xlab("RNA Integrity Number") 
+
+rin_nbreads = ggplot(fastqc_statistics[[1]], aes(y=tot.seq, x=RIN,col = type)) + 
+    geom_point()+
+    ylab("Total Nb of Sequences (10e6)") +
+    xlab("RNA Integrity Number") 
+
+hist_phred  = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, color=type)) +
+    geom_histogram(fill="white",show.legend = FALSE) + 
+    ylab("Mean quality per sample (Phred Score)")
+
+hist_reads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq, color=type)) +
+    geom_histogram(fill="white") + 
+    ylab("Total Nb of Sequences (10e6)")
+
+rin_phred + rin_nbreads + hist_phred + hist_reads
+
+pdf(file.path('..',params$qc.dir,'qc_plots.pdf'),width = 9,height = 7)
+rin_phred + rin_nbreads + hist_phred + hist_reads
+dev.off()
+
+
+```
+
 
 # QC Plots
  * A few plots that might be worth looking at (but remember that we have all individual plots).
-```{r, plots,timehook =T,fig.width = 11, echo=T}
+```{r, plots,timehook =T,fig.width = 11, echo=F}
 # Plot per sequence GC content
 qc_read_collection = fastqc_statistics[[3]]
 ggplotly(qc_plot_collection(qc_read_collection, "Per sequence GC content"))

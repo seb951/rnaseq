@@ -6,11 +6,11 @@ output:
   html_document:
     number_sections: T
 params:
-  fq.dir: 'data/fastq'
-  qc.dir: 'data/fastqc_results2'
+  fq.dir: '../data/fastq'
+  qc.dir: '../data/fastqc_results2'
   threads: 12
   fastqc.path: 'fastqc' 
-  metadata: 'data/librairies_1_a_70_et_RIN.xlsx'
+  metadata: '../data/librairies_1_a_70_et_RIN.xlsx'
   adapters.dir: NULL
 ---
 
@@ -58,11 +58,11 @@ print(params)
 
 # Running FastQC functions
 ```{r, tables,message = T, eval = T, echo = T, timehook = T}
-fastqc_statistics= fastqc_wrapper(fq.dir = file.path(getwd(),'..',params$fq.dir),
-                qc.dir = file.path(getwd(),'..',params$qc.dir),
+fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
+                qc.dir = params$qc.dir,
                 threads = params$threads,
                 fastqc.path =params$fastqc.path,
-                metadata.dir = file.path(getwd(),'..',params$metadata),
+                metadata.dir = params$metadata,
                 adapters.dir = params$adapters.dir)
 ```
 
@@ -106,7 +106,7 @@ hist_reads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq, color=type)) +
 
 rin_phred + rin_nbreads + hist_phred + hist_reads
 
-pdf(file.path('..',params$qc.dir,'qc_plots.pdf'),width = 9,height = 7)
+pdf(file.path(params$qc.dir,'qc_plots.pdf'),width = 9,height = 7)
 rin_phred + rin_nbreads + hist_phred + hist_reads
 dev.off()
 

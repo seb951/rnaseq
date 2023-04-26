@@ -20,7 +20,7 @@ sequences = function(fq.dir='data/fastq',
   out.dir.length = length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out.dir))) 
   
   if(length(R12)==0) warning('It appears like your directory contains no .fastq.gz file',immediate. = TRUE)
-  if(out.dir.length>1) warning(paste0('It appears like your output directory ',out.dir,' already contains ',out.dir.length,' files. You may want to check it, because I will just add to it'),immediate. = TRUE)
+  if(out.dir.length>1) warning(paste0(out.dir,' already contains ',out.dir.length,' files. I will add files to this directory'),immediate. = TRUE)
   message(paste0('Done listing sequences, Time is: ',Sys.time()))
   
   return(list(R1,R2,R1_trim,R2_trim,sample_names))
@@ -111,8 +111,7 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
                R1_trim,
                ' ',
                R2_trim,
-               ' --outSAMtype BAM SortedByCoordinate --sjdbOverhang 99
---outFilterMultimapNmax 1 --outReadsUnmapped None --quantMode GeneCounts --sjdbGTFfile ',
+               ' --outSAMtype BAM SortedByCoordinate --sjdbOverhang 99 --outFilterMultimapNmax 1 --outReadsUnmapped None --quantMode GeneCounts --sjdbGTFfile ',
                annotation.gtf,
                ' --runThreadN ',
                threads ,
@@ -236,23 +235,23 @@ sort_bam_by_name = function (out_prefix = 'rnaseq/out/toto_',
 # htseq-count step 
 #======================
 htseq_count = function (
-    out_prefix = 'out/toto_',
+    #out_prefix = 'out/toto_',
     annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
-    bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'),
-    htseq_fwd = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_fwd.txt'),
-    htseq_reverse = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_reverse.txt'),
-    htseq_onstranded = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_unstranded.txt'),
-    i=1,
-    out.dir=out.dir)
+    #bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'),
+    #htseq_fwd = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_fwd.txt'),
+    #htseq_reverse = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_reverse.txt'),
+    #htseq_onstranded = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_unstranded.txt'),
+    out.dir=out.dir,
+    threads=12)
                         {
   
-    htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_fwd,' 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/htseq.err')
-    htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
-    htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
+     htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes -n ',threads,'--idattr=gene_id ',file.path(out.dir,'*sortN.bam'),' ',annotation.gtf, ' >',file.path(out.dir,'htseq_counts.tsv'),' 2>',file.path(out.dir,'logs','htseq.err'))
+ #   htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
+ #   htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
 
-    system(htseq1)
-    system(htseq2)
-    system(htseq3)
+     system(htseq1)
+  #  system(htseq2)
+  #  system(htseq3)
   
   #  message(htseq1)
   #  message(htseq2)
@@ -296,8 +295,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                           out.dir = out.dir)
   
   
-   for(i in seq_along(fastq_files[[5]])) {
-#  for(i in 1:2) {
+  for(i in seq_along(fastq_files[[5]])) {
     
     #out_prefix
     out_prefix = paste0(out.dir,fastq_files[[5]][i],'_')
@@ -335,18 +333,18 @@ rna_wrapper = function(fq.dir = params$fq.dir,
     #sortbam
     sort_bam_by_name(out_prefix = out_prefix)
     
-    #htseq
-    htseq_count(out_prefix = out_prefix,
-                annotation.gtf = annotation.gtf,
-                i = i,
-                out.dir = out.dir)
-    
-    #cleanup
-    cleanup(out_prefix = out_prefix)
-    
     #message
     message(paste0('--- Done sample, ',fastq_files[[5]][i],', Time is: ',Sys.time(),' ---'))
   }
+  
+  #htseq for all
+  htseq_count(annotation.gtf = annotation.gtf,
+              out.dir = out.dir,
+              threads = threads)
+  
+  #final cleanup
+  cleanup(out_prefix = out_prefix)
+  
 }
 
 

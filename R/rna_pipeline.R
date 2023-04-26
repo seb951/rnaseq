@@ -12,7 +12,7 @@ option_list = list(
   make_option( "--trimdir",type="character", default='out/fastq.trim', 
                help="trimmed fastq directory [default %default]", metavar="character"),
   
-  make_option( "--genomedir",type="character", default='data/reference_genome/chr1_small_index', 
+  make_option( "--genomeindexdir",type="character", default='data/reference_genome/chr1_small_index', 
                help="reference genome index directory [default %default]", metavar="character"),
   
   make_option( "--annotationgtf",type="character", default='data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf', 
@@ -57,7 +57,7 @@ if(arguments$args == 'QC' | arguments$args == 'counts') {
 if(arguments$args == 'counts') {
 rna_wrapper(fq.dir = arguments$options$fqdir,
                          trim.dir= arguments$options$trimdir,
-                         genomedir = arguments$options$genomedir,
+                         genomedir = arguments$options$genomeindexdir,
                          annotation.gtf = arguments$options$annotationgtf,
                          genomefasta = arguments$options$genomefasta,
                          out.dir = arguments$options$outdir,

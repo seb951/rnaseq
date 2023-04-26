@@ -86,23 +86,23 @@ fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
 ```{r, summary, fig.width = 9, fig.height=9,echo =F}
 
 
-rin_phred = ggplot(fastqc_statistics[[1]], aes(y=mean_quality, x=RIN,col = type)) + 
+rin_phred = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, y=RIN,col = type)) + 
     geom_point( show.legend = FALSE)+
-    ylab("Mean quality per sample (Phred Score)") +
-    xlab("RNA Integrity Number") 
+    xlab("Mean quality per sample (Phred Score)") +
+    ylab("RNA Integrity Number") 
 
-rin_nbreads = ggplot(fastqc_statistics[[1]], aes(y=tot.seq, x=RIN,col = type)) + 
+rin_nbreads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq, y=RIN,col = type)) + 
     geom_point()+
-    ylab("Total Nb of Sequences (10e6)") +
-    xlab("RNA Integrity Number") 
+    xlab("Total Nb of Sequences (10e6)") +
+    ylab("RNA Integrity Number") 
 
-hist_phred  = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, color=type)) +
-    geom_histogram(fill="white",show.legend = FALSE) + 
-    ylab("Mean quality per sample (Phred Score)")
+hist_phred  = ggplot(fastqc_statistics[[1]], aes(x=mean_quality)) +
+    geom_histogram() + 
+    xlab("Mean quality per sample (Phred Score)")
 
-hist_reads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq, color=type)) +
-    geom_histogram(fill="white") + 
-    ylab("Total Nb of Sequences (10e6)")
+hist_reads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq)) +
+    geom_histogram() + 
+    xlab("Total Nb of Sequences (10e6)")
 
 rin_phred + rin_nbreads + hist_phred + hist_reads
 

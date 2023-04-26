@@ -52,14 +52,14 @@ fastqc_wrapper = function(fq.dir = 'path',
                      threads = threads,
                      fastqc.path = fastqc.path,
                      adapters.dir = adapters.dir)}
-  } else {message(paste0('Directory ',qc.dir, ' is  not empty. Will not run fastqc and assume that it has already run.'))}
+  } else {message(paste0(Sys.time(),' --- Directory ',qc.dir, ' is not empty. Will assume that fastqc has already ran.'))}
   
   #zip the whole thing
   zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
-  system(zip_cmd)
+  if(file.exists(file.path(fq.dir,"../fastqc_individual_reports.zip"))==F) system(zip_cmd)
   
   message(paste0(Sys.time(),
-                 '--- Zip archive is stored here: ',
+                 ' --- Zip archive is stored here: ',
                  file.path(fq.dir,"../fastqc_individual_reports.zip")))
   
   #aggregate results
@@ -92,7 +92,7 @@ fastqc_wrapper = function(fq.dir = 'path',
  
   # metadata
   if(!is.null(metadata.dir) & file.exists(metadata.dir)){
-    metadata = read_xlsx(metadata.dir)
+    metadata = suppressMessages(read_xlsx(metadata.dir))
     rin = metadata %>% select(c(Nom...1,RIN))
     colnames(rin)[1] = 'bio_sample'
     qc_stats =  merge(qc_stats,rin)
@@ -100,5 +100,8 @@ fastqc_wrapper = function(fq.dir = 'path',
   
   qc_stats$type = ifelse(regexpr('umeur',qc_stats$sample)>0,'Tumeur','Sain')
   qc_stats$tot.seq =  as.numeric(qc_stats$tot.seq) / 1000000
+  
+  message(paste0(Sys.time(),' --- Done preparing QC data'))
+  
   return(list(qc_stats,qc_summary,qc_read_collection))
 }

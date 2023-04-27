@@ -286,8 +286,8 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                        threads = params$threads,
                        nbfiles = params$nbfiles){
   
-  dir.create(out.dir)
-  dir.create(file.path(out.dir,'logs'))
+  dir.create(out.dir,showWarnings =F)
+  dir.create(file.path(out.dir,'logs'),showWarnings =F)
   
   #fastq files
   fastq_files = sequences(fq.dir = fq.dir,

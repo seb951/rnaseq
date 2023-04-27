@@ -66,7 +66,7 @@ rna_wrapper(fq.dir = arguments$options$fqdir,
                          out.dir = arguments$options$outdir,
                          cutadapt=arguments$options$cutadapt,
                          threads= arguments$options$threads,
-                         nbfiles= arguments$options$nbfiles,
+                         nbfiles= arguments$options$nbfiles
             )
 }
 

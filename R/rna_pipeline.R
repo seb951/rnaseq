@@ -30,6 +30,9 @@ option_list = list(
   make_option( "--threads",type="integer", default=12, 
                help="Nb of Threads to use [default %default]", metavar="character"),
   
+  make_option( "--nbfiles",type="character", default='all', 
+               help="specify how many files to process [default %default] or an integer", metavar="character"),
+  
   ###QC specific inputs
   make_option( "--qcdir",type="character", default='data/fastqc_results', 
                help="QC argument: output directory [default %default]", metavar="character"),
@@ -62,7 +65,9 @@ rna_wrapper(fq.dir = arguments$options$fqdir,
                          genomefasta = arguments$options$genomefasta,
                          out.dir = arguments$options$outdir,
                          cutadapt=arguments$options$cutadapt,
-                         threads= arguments$options$threads)
+                         threads= arguments$options$threads,
+                         nbfiles= arguments$options$nbfiles,
+            )
 }
 
 #running QC notebook

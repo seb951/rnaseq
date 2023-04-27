@@ -6,7 +6,7 @@
 sequences = function(fq.dir='data/fastq',
                      trim.dir='out/fastq.trim',
                      out.dir = 'out/') {
-  R12 = list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),fq.dir),pattern = 'R[12].fastq.gz')
+  R12 = list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),fq.dir),pattern = 'R[12].fastq.gz$')
   sample_names = unique(gsub('_R[12].fastq.gz','',R12))
   
   R1 = paste0(file.path(fq.dir,sample_names),'_R1.fastq.gz')
@@ -283,7 +283,8 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                        genomefasta = params$genomefasta,
                        out.dir = params$out.dir,
                        cutadapt = params$cutadapt,
-                       threads = params$threads){
+                       threads = params$threads,
+                       nbfiles = params$nbfiles){
   
   dir.create(out.dir)
   dir.create(file.path(out.dir,'logs'))
@@ -294,7 +295,11 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                           out.dir = out.dir)
   
   
-  for(i in seq_along(fastq_files[[5]])) {
+  #files to process depends on nbfiles
+  files = seq_along(fastq_files[[5]])
+  if(nbfiles=='all') files = files else {files = files[1:min(length(files),as.numeric(nbfiles))]}
+  
+  for(i in files) {
     
     #out_prefix
     out_prefix = paste0(out.dir,fastq_files[[5]][i],'_')

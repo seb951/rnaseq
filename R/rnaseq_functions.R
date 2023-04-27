@@ -141,7 +141,7 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
   system(cmd2)
   
   #message(cmd1)
- # message(cmd2)
+  #message(cmd2)
   
   message(paste0('Done samtools bamtosam, Time is: ',Sys.time()))
   
@@ -154,7 +154,7 @@ bamtosam = function(out_prefix = 'rnaseq/out/toto_',
 # index
 #======================
 picardtools = function(out_prefix = 'rnaseq/out/toto_',
-                       bam_out = paste0(out_prefix,'trimmed_Aligned_PP_UM.bam'),
+                       bam = paste0(out_prefix,'Aligned.sortedByCoord.out.bam'),
                        bam_added = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded.bam'),
                        bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
                        metrics = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_metrics.txt'),
@@ -165,7 +165,7 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
   
   cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
                 'PicardCommandLine AddOrReplaceReadGroups -I ',
-                gsub(".bam",".sam",bam_out),
+                bam,
                 ' -O ',
                 bam_added,
                 ' -SO coordinate -RGID ',out_prefix_nopath,' -RGLB ',out_prefix_nopath,' -RGPL illumina -RGPU 1 -RGSM ',out_prefix_nopath,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/picardtools.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/picardtools.err')
@@ -183,8 +183,8 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
   system(cmd1)
   system(cmd2)
   
- # message(cmd1)
-#  message(cmd2)
+  #message(cmd1)
+  #message(cmd2)
 
   message(paste0('Done picard tools MarkDuplicates, Time is: ',Sys.time()))
   
@@ -235,17 +235,16 @@ sort_bam_by_name = function (out_prefix = 'rnaseq/out/toto_',
 # htseq-count step 
 #======================
 htseq_count = function (
-    #out_prefix = 'out/toto_',
     annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf',
-    #bam_nounmapped_sort = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN.bam'),
-    #htseq_fwd = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_fwd.txt'),
-    #htseq_reverse = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_reverse.txt'),
-    #htseq_onstranded = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortN_htseq_unstranded.txt'),
+    #htseq_fwd = paste0(out_prefix,'htseq_fwd.txt'),
+    #htseq_reverse = paste0(out_prefix,'htseq_reverse.txt'),
+    #htseq_onstranded = paste0(out_prefix,'htseq_unstranded.txt'),
+    #out_prefix = 'out/toto_',
     out.dir=out.dir,
     threads=12)
                         {
   
-     htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes -n ',threads,'--idattr=gene_id ',file.path(out.dir,'*sortN.bam'),' ',annotation.gtf, ' >',file.path(out.dir,'htseq_counts.tsv'),' 2>',file.path(out.dir,'logs','htseq.err'))
+     htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=yes -n ',threads,' --idattr=gene_id ',file.path(out.dir,'*sortN.bam'),' ',annotation.gtf, ' >',file.path(out.dir,'htseq_counts.tsv'),' 2>',file.path(out.dir,'logs','htseq.err'))
  #   htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
  #   htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
 
@@ -257,7 +256,7 @@ htseq_count = function (
   #  message(htseq2)
   #  message(htseq3)
   
-  message(paste0('Done htseq, Time is: ',Sys.time()))  
+  message(paste0('Done htseq-count for all samples, Time is: ',Sys.time()))  
     
   return('')
 }
@@ -323,7 +322,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
     
     
     #bamtosam
-    bamtosam(out_prefix = out_prefix)
+    #bamtosam(out_prefix = out_prefix)
     
     #picardtools         
     picardtools(out_prefix = out_prefix,

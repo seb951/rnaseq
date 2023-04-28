@@ -31,7 +31,7 @@ option_list = list(
                help="Nb of Threads to use [default %default]", metavar="character"),
   
   make_option( "--nbfiles",type="character", default='all', 
-               help="specify how many files to process [default %default] or an integer", metavar="character"),
+               help="specify how many files to process [default %default] or an integer or two integers seperated by a comma (e.g. 2,4)", metavar="character"),
   
   ###QC specific inputs
   make_option( "--qcdir",type="character", default='data/fastqc_results', 

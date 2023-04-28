@@ -295,9 +295,13 @@ rna_wrapper = function(fq.dir = params$fq.dir,
                           out.dir = out.dir)
   
   
-  #files to process depends on nbfiles
+  #files to process depends on nbfiles parameter
   files = seq_along(fastq_files[[5]])
-  if(nbfiles=='all') files = files else {files = files[1:min(length(files),as.numeric(nbfiles))]}
+  nbfiles =  strsplit(nbfiles,',')[[1]]
+  if(nbfiles[1]=='all') files = files
+  if(length(nbfiles) == 1 & nbfiles != 'all') {files = files[1:min(length(files),as.numeric(nbfiles))]}
+  if(length(nbfiles) == 2) {files = files[as.numeric(nbfiles[1]):as.numeric(nbfiles[2])]}
+  
   
   for(i in files) {
     

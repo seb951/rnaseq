@@ -1,10 +1,10 @@
 suppressWarnings(library(optparse))
-source('R/rnaseq_functions.R')
+source('R/counts_functions.R')
 
 
 #For info, in Windows, you can call Rscript as such: C:'\Program Files\'R\R-4.2.2\bin\x64\Rscript.exe script.R
 
-#make options 
+#options (QC and counts)
 option_list = list(
   make_option( "--fqdir",type="character", default='data/fastq', 
                help="fastq directory [default %default]", metavar="character"),
@@ -83,5 +83,5 @@ rmarkdown::render('./Rmarkdown/fastqc_reports.Rmd',params = list(fq.dir = argume
 }
 
 
-
-
+#running another module here:
+if((arguments$args != 'QC') & (arguments$args != 'counts')) print('command not recognized. Goodbye')

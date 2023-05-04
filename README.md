@@ -60,7 +60,16 @@ Options:
 
 ```
 
+## TO DO 
+  * urgent:
+    * verify that a minimal example exists for **QC** and **counts**
+    * avoid rerunning steps and clean-up temp files (**counts**)
+    * integrate `gatk` and check the validaty of `STAR` options.
+  * not-so-urgent:
+    * [Kallisto module](https://pachterlab.github.io/kallisto/about) to compare with the STAR/htseq approach.
+    * unit-test the functions, better handling of parameters
 
+    
 
 ## Further information
   * sebastien.renaut.1@ulaval.ca

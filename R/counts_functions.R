@@ -128,20 +128,20 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
 
 
 #======================
-#  Bam to sam
+#  Bam to sam (deprecated)
 #=====================
 bamtosam = function(out_prefix = 'rnaseq/out/toto_',
                     bam = paste0(out_prefix,'Aligned.sortedByCoord.out.bam'),
                     bam_out = paste0(out_prefix,'trimmed_Aligned_PP_UM.bam')){
 
-  #cmd1=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -f 0x0002 ",bam," |  grep -P '^@|NH:i:1\t' | samtools view -h -b -  >",bam_out)
+  cmd1=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -f 0x0002 ",bam," |  grep -P '^@|NH:i:1\t' | samtools view -h -b -  >",bam_out)
   cmd2=paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools view -h -o ",gsub(".bam",".sam",bam_out)," ",bam)
 
-  #system(cmd1)
+  system(cmd1)
   system(cmd2)
   
-  #message(cmd1)
-  #message(cmd2)
+  message(cmd1)
+  message(cmd2)
   
   message(paste0('Done samtools bamtosam, Time is: ',Sys.time()))
   
@@ -201,7 +201,7 @@ picardtools = function(out_prefix = 'rnaseq/out/toto_',
 
 
 #======================
-# sort cleaned bam remove unmapped reads   sort bam by name 
+# sort cleaned bam remove unmapped reads sort bam by name 
 #======================
 sort_bam_by_name = function (out_prefix = 'rnaseq/out/toto_',
                              bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),
@@ -328,11 +328,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
             out_prefix = out_prefix,
             i = i,
             out.dir = out.dir)
-    
-    
-    #bamtosam
-    #bamtosam(out_prefix = out_prefix)
-    
+        
     #picardtools         
     picardtools(out_prefix = out_prefix,
                 i = i,

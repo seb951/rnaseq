@@ -84,4 +84,3 @@ rmarkdown::render('./Rmarkdown/fastqc_reports.Rmd',params = list(fq.dir = argume
 
 
 #running another module here:
-if((arguments$args != 'QC') & (arguments$args != 'counts')) print('command not recognized. Goodbye')

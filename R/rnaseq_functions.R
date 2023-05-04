@@ -306,7 +306,7 @@ rna_wrapper = function(fq.dir = params$fq.dir,
   for(i in files) {
     
     #out_prefix
-    out_prefix = paste0(out.dir,fastq_files[[5]][i],'_')
+    out_prefix = file.path(out.dir,paste0(fastq_files[[5]][i],'_'))
     
     #trimming
     trimming(trim.dir = trim.dir,

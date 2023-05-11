@@ -84,6 +84,7 @@ fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
 
 # Summary Plots 
 ```{r, summary, fig.width = 9, fig.height=9,echo =F}
+fastqc_statistics[[1]]$type = ifelse(fastqc_statistics[[1]]$type=='Sain','Normal','Tumor')
 rin_phred = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, y=RIN,col = type)) + 
     geom_point()+
     xlab("Mean quality per sample (Phred Score)") +

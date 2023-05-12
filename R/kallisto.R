@@ -65,29 +65,31 @@ trimming = function(trim.dir = 'out/fastq.trim',
 #=====================
 kallisto = function(R1_trim = sequences()[[3]][1],
                    R2_trim = sequences()[[4]][1],
-                   out.dir = 'data/kallisto',
+                   in.dir = file.path('data/index'),
+                   out.dir = file.path('data/kallisto'),
                    out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_')
                    ) {
     
     #index cmd
-    # index downloaded from here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/GRCh38.p13.genome.fa.gz
+    # index downloaded from here: https://www.gencodegenes.org/human/
     #Crééer fichier contenant l'index
-    index = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i GRCh38.p13.genome.idx', file.path('data/index'), 'GRCh38.p13.genome.fa.gz')
+    index = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i', in.dir, 'gencode.v43.transcripts.idx', in.dir, 'gencode.v43.transcripts.fa.gz')
     system(index)
     
     #kallisto cmd
-    # COMMAND -> kallisto quant -i GRCh38.p13.genome.idx -o output -b 100 R1_trim R2_trim
-    
-    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i GRCh38.p13.genome.idx -o',
+    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i', in.dir, 'gencode.v43.transcripts.idx -o',
                  out.dir,
-                 '-b 100',
+                 '-b 100', 
+                 in.dir,
                  R1_trim,
                  ' ',
-                 R2_trim, out_prefix,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.err')
+                 in.dir,
+                 R2_trim, 
+                 out_prefix,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.err')
     
     system(cmd)
     
-    #view results with sleuth 
+    #view results abundance.h5 with sleuth 
     
     # message(cmd)
     

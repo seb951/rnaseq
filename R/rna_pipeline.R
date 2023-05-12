@@ -34,13 +34,13 @@ option_list = list(
                help="specify how many files to process [default %default] or an integer or two integers seperated by a comma (e.g. 2,4)", metavar="character"),
   
   ###QC specific inputs
-  make_option( "--qcdir",type="character", default='data/fastqc_results', 
+  make_option( "--qcdir",type="character", default='fastqc_results', 
                help="QC argument: output directory [default %default]", metavar="character"),
   
   make_option( "--metadata",type="character", default='data/librairies_1_a_70_et_RIN.xlsx', 
                help="QC argument: output directory [default %default]", metavar="character"),
   
-  make_option( "--fastqc",type="character", default='data/fastqc', 
+  make_option( "--fastqc",type="character", default='fastqc', 
                help="QC argument: where is fastqc installed [default %default]", metavar="character")
   ) 
 
@@ -72,13 +72,15 @@ rna_wrapper(fq.dir = arguments$options$fqdir,
 
 #running QC notebook
 if(arguments$args == 'QC') {
+dir.create(arguments$options$outdir)
 library(rmarkdown)
 rmarkdown::render('./Rmarkdown/fastqc_reports.Rmd',params = list(fq.dir = arguments$options$fqdir,
-                                                                 qc.dir = arguments$options$qcdir,
+                                                                 qc.dir = file.path(arguments$options$outdir,arguments$options$qcdir),
                                                                  threads =  arguments$options$threads,
                                                                  metadata = arguments$options$metadata,
                                                                  fastqc.path = arguments$options$fastqc,
-                                                                 adapters.dir = NULL)
+                                                                 adapters.dir = NULL),
+                  output_dir = arguments$options$outdir
                   )
 }
 

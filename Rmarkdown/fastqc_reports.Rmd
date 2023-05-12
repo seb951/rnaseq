@@ -6,11 +6,11 @@ output:
   html_document:
     number_sections: T
 params:
-  fq.dir: '../data/fastq'
-  qc.dir: '../data/fastqc_results'
+  fq.dir: 'data/fastq'
+  qc.dir: 'fastqc_results'
   threads: 12
   fastqc.path: 'fastqc' 
-  metadata: '../data/librairies_1_a_70_et_RIN.xlsx'
+  metadata: 'data/librairies_1_a_70_et_RIN.xlsx'
   adapters.dir: NULL
 ---
 
@@ -36,7 +36,7 @@ knitr::knit_hooks$set(timehook = local({
   }
 }))
 
-#knitr::opts_knit$set(root.dir = '..')
+knitr::opts_knit$set(root.dir = '..')
 ``` 
 
 ```{r, requirements,echo=TRUE,message =FALSE,warning =F}
@@ -48,7 +48,7 @@ library(ggplot2)
 library(tidyr)
 library(plotly)
 library(patchwork)
-source('../R/fastqc_functions.R')
+source('R/fastqc_functions.R')
 ```
 
 # FastQC parameters
@@ -83,7 +83,7 @@ fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
 ```
 
 # Summary Plots 
-```{r, summary, fig.width = 9, fig.height=9,echo =F}
+```{r, summary,echo =F,fig.show="hold",out.width="50%"}
 fastqc_statistics[[1]]$type = ifelse(fastqc_statistics[[1]]$type=='Sain','Normal','Tumor')
 rin_phred = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, y=RIN,col = type)) + 
     geom_point()+
@@ -103,7 +103,13 @@ hist_reads = ggplot(fastqc_statistics[[1]], aes(x=tot.seq)) +
     geom_histogram() + 
     xlab("Total Nb of Sequences (10e6)")
 
-hist_reads + hist_phred + rin_nbreads +  rin_phred 
+hist_reads
+
+hist_phred
+
+ggplotly(rin_nbreads)
+
+ggplotly(rin_phred)
 
 pdf(file.path(params$qc.dir,'qc_plots.pdf'),width = 9,height = 7)
 hist_reads + hist_phred + rin_nbreads +  rin_phred 

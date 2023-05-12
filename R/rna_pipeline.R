@@ -1,6 +1,8 @@
+Sys.setenv(RSTUDIO_PANDOC="/usr/lib/rstudio/resources/app/bin/quarto/bin/tools")
 suppressWarnings(library(optparse))
 source('R/counts_functions.R')
-
+source('R/fastqc_functions.R')
+source('R/kallisto.R')
 
 #For info, in Windows, you can call Rscript as such: C:'\Program Files\'R\R-4.2.2\bin\x64\Rscript.exe script.R
 
@@ -82,5 +84,9 @@ rmarkdown::render('./Rmarkdown/fastqc_reports.Rmd',params = list(fq.dir = argume
                   )
 }
 
+#running kallisto
+if(arguments$args == 'kallisto') {
 
-#running another module here:
+    
+}
+

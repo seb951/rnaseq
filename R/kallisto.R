@@ -1,6 +1,7 @@
 #kallisto function
 library(data.table)
 library(GenomicFeatures)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(tximport)
 library(DESeq2)
 library(apeglm)
@@ -96,8 +97,6 @@ kallisto = function(R1_trim = sequences()[[3]][1],
     
     system(cmd)
     
-    #view results abundance.h5 with sleuth 
-    
     # message(cmd)
     
     message(paste0('Done Kallisto, Time is: ',Sys.time()))
@@ -106,19 +105,32 @@ kallisto = function(R1_trim = sequences()[[3]][1],
 }
 
 #=====================
-#load TxDB
+#load TxDB from TxDb annotation package (TxDb.Hsapiens.UCSC.hg38.knownGene)
 #=====================
-#Prepare genome (fasta, gff downloaded from here: https://www.gencodegenes.org/human/)
-annotation.gtf = 'data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf'
-txdb = ref_load(annotation.gtf)
+dir = "../../"
+sampleData = paste0(dir, "clinical.txt")
+sampleData = fread(sampleData)
+rownames(sampleData) = sampleData$ENA_RUN
+sampleData$individual = as.factor(sampleData$individual)
+sampleData$paris_classification = as.factor(sampleData$paris_classification)
 
+# Use relevel() to set adjacent normal samples as reference
+sampleData$paris_classification = relevel(sampleData$paris_classification, ref = "normal")
+
+files = file.path(paste0(dir, "kallisto"), list.files(paste0(dir, "kallisto")), "quant.sf")
+names(files) = list.files(paste0(dir, "kallisto"))
+
+#=====================
+#load TxDB from TxDb annotation package (TxDb.Hsapiens.UCSC.hg38.knownGene)
+#=====================
+txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
 k = keys(txdb, keytype = "TXNAME")
 tx2gene = select(txdb, k, "GENEID", "TXNAME")
 
 #=====================
 #Load expression data
 #=====================
-files = file.path(paste0('data/kallisto'), list.files(paste0('data/kallisto')), "abundance.h5")
+files = file.path(paste0(dir, 'data/kallisto'), list.files(paste0(dir, 'data/kallisto')), "abundance.h5")
 names(files) = list.files(paste0(dir, 'data/kallisto'))
 
 #import abundance.h5 files

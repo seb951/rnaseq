@@ -115,16 +115,18 @@ tx2gene = select(txdb, k, "GENEID", "TXNAME")
 #Load expression data
 #=====================
 dir = 'data/kallisto'
-files = file.path(paste0(dir, 'kallisto'), list.files(paste0(dir, 'kallisto')), "abundance.h5")
-names(files) = list.files(paste0(dir, 'kallisto'))
+files = file.path(dir, 'kallisto', "abundance.h5")
+names(files) = paste0(dir, 'kallisto')
 
 #import abundance.h5 files
-txi = tximport(files, type = c("kallisto"), txIn = TRUE, txOut = FALSE, tx2gene = tx2gene, countsFromAbundance = "no")
+txi = tximport(files, type = "kallisto", txOut = TRUE)
 
 #=====================
 #Create DESeqDataSet object
 #=====================
-dds = DESeqDataSetFromTximport(txi, colData = sampleData, ~ individual + paris_classification)
+sampleTable = as.data.frame(txi)
+rownames(sampleTable) = colnames(txi$counts)
+dds = DESeqDataSetFromTximport(txi, colData = sampleData, ~ condition)
 
 #Differential expression analysis
 dds = DESeq(dds)

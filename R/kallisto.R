@@ -107,22 +107,6 @@ kallisto = function(R1_trim = sequences()[[3]][1],
 #=====================
 #load TxDB from TxDb annotation package (TxDb.Hsapiens.UCSC.hg38.knownGene)
 #=====================
-dir = "../../"
-sampleData = paste0(dir, "clinical.txt")
-sampleData = fread(sampleData)
-rownames(sampleData) = sampleData$ENA_RUN
-sampleData$individual = as.factor(sampleData$individual)
-sampleData$paris_classification = as.factor(sampleData$paris_classification)
-
-# Use relevel() to set adjacent normal samples as reference
-sampleData$paris_classification = relevel(sampleData$paris_classification, ref = "normal")
-
-files = file.path(paste0(dir, "kallisto"), list.files(paste0(dir, "kallisto")), "quant.sf")
-names(files) = list.files(paste0(dir, "kallisto"))
-
-#=====================
-#load TxDB from TxDb annotation package (TxDb.Hsapiens.UCSC.hg38.knownGene)
-#=====================
 txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
 k = keys(txdb, keytype = "TXNAME")
 tx2gene = select(txdb, k, "GENEID", "TXNAME")
@@ -130,12 +114,12 @@ tx2gene = select(txdb, k, "GENEID", "TXNAME")
 #=====================
 #Load expression data
 #=====================
-files = file.path(paste0(dir, 'data/kallisto'), list.files(paste0(dir, 'data/kallisto')), "abundance.h5")
-names(files) = list.files(paste0(dir, 'data/kallisto'))
+dir = 'data/kallisto'
+files = file.path(paste0(dir, 'kallisto'), list.files(paste0(dir, 'kallisto')), "abundance.h5")
+names(files) = list.files(paste0(dir, 'kallisto'))
 
 #import abundance.h5 files
-txi = tximport(files, type = "kallisto", tx2gene = tx2gene, 
-               txIn = TRUE, txOut = FALSE, countsFromAbundance = "no")
+txi = tximport(files, type = c("kallisto"), txIn = TRUE, txOut = FALSE, tx2gene = tx2gene, countsFromAbundance = "no")
 
 #=====================
 #Create DESeqDataSet object

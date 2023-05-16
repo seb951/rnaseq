@@ -107,16 +107,23 @@ kallisto = function(R1_trim = sequences()[[3]][1],
 #=====================
 #load TxDB from TxDb annotation package (TxDb.Hsapiens.UCSC.hg38.knownGene)
 #=====================
-txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
+library(GenomicFeatures)
+dir = '/data/reference_genome'
+gtf = file.path(dir, "gencode.v43.primary_assembly.annotation_small.gtf")
+txdb.filename <- "gencode.v33.annotation.sqlite"
+txdb = makeTxDbFromGFF(gtf)
+saveDb(txdb, txdb.filename)
+txdb = loadDb(txdb.filename)
 k = keys(txdb, keytype = "TXNAME")
 tx2gene = select(txdb, k, "GENEID", "TXNAME")
+
 
 #=====================
 #Load expression data
 #=====================
-dir = 'data/kallisto'
-files = file.path(dir, 'kallisto', "abundance.h5")
-names(files) = paste0(dir, 'kallisto')
+dir = "/data/"
+files = file.path(paste0(dir, "kallisto"), list.files(paste0(dir, "kallisto")))
+names(files) = list.files(paste0(dir, "kallisto"))
 
 #import abundance.h5 files
 txi = tximport(files, type = "kallisto", tx2gene = tx2gene, 

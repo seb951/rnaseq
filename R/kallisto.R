@@ -119,14 +119,14 @@ files = file.path(dir, 'kallisto', "abundance.h5")
 names(files) = paste0(dir, 'kallisto')
 
 #import abundance.h5 files
-txi = tximport(files, type = "kallisto", txOut = TRUE)
+txi = tximport(files, type = "kallisto", tx2gene = tx2gene, 
+               txIn = TRUE, txOut = FALSE, countsFromAbundance = "no")
 
 #=====================
 #Create DESeqDataSet object
 #=====================
-sampleTable = as.data.frame(txi)
-rownames(sampleTable) = colnames(txi$counts)
-dds = DESeqDataSetFromTximport(txi, colData = sampleData, ~ condition)
+dds = DESeqDataSetFromTximport(txi, 
+                               colData = sampleData, ~ individual + paris_classification)
 
 #Differential expression analysis
 dds = DESeq(dds)

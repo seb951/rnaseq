@@ -110,10 +110,7 @@ kallisto = function(R1_trim = sequences()[[3]][1],
 library(GenomicFeatures)
 dir = '/data/reference_genome'
 gtf = file.path(dir, "gencode.v43.primary_assembly.annotation_small.gtf")
-txdb.filename <- "gencode.v33.annotation.sqlite"
 txdb = makeTxDbFromGFF(gtf)
-saveDb(txdb, txdb.filename)
-txdb = loadDb(txdb.filename)
 k = keys(txdb, keytype = "TXNAME")
 tx2gene = select(txdb, k, "GENEID", "TXNAME")
 

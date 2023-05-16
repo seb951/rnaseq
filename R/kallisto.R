@@ -121,8 +121,8 @@ tx2gene = select(txdb, k, "GENEID", "TXNAME")
 #=====================
 #Load expression data
 #=====================
-dir = "/data/"
-files = file.path(paste0(dir, "kallisto"), list.files(paste0(dir, "kallisto")))
+dir = "/data/kallisto"
+files = file.path(paste0(dir, "kallisto"), list.files(paste0(dir, "kallisto")), "abundance.h5")
 names(files) = list.files(paste0(dir, "kallisto"))
 
 #import abundance.h5 files

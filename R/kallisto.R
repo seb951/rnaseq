@@ -107,12 +107,9 @@ kallisto = function(R1_trim = sequences()[[3]][1],
 #=====================
 #load TxDB from TxDb annotation package (TxDb.Hsapiens.UCSC.hg38.knownGene)
 #=====================
-library(GenomicFeatures)
-dir = '/data/reference_genome'
-gtf = file.path(dir, "gencode.v43.primary_assembly.annotation_small.gtf")
-txdb = makeTxDbFromGFF(gtf)
-k = keys(txdb, keytype = "TXNAME")
-tx2gene = select(txdb, k, "GENEID", "TXNAME")
+txdb_v31_hg19_chr1 = gencode_txdb("43", "hg19", chrs = "chr1")
+k = keys(txdb_v31_hg19_chr1, keytype = "TXNAME")
+tx2gene = select(txdb_v31_hg19_chr1, k, "GENEID", "TXNAME")
 
 
 #=====================

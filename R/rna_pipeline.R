@@ -6,7 +6,7 @@ source('R/counts_functions.R')
 
 #options (QC and counts)
 option_list = list(
-  make_option( "--fqdir",type="character", default='data/fastq', 
+  make_option( "--fqdir",type="character", default='data/fastq2', 
                help="fastq directory [default %default]", metavar="character"),
   
   make_option( "--trimdir",type="character", default='out/fastq.trim', 
@@ -46,7 +46,7 @@ option_list = list(
 
 #
 parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
-arguments <- parse_args(parser,positional_arguments = 1)
+arguments <- parse_args(parser,args ='counts',positional_arguments = 1)
 
 if(arguments$args == 'QC' | arguments$args == 'counts') {
   sprintf("Running command ( %s )", arguments$args)
@@ -56,9 +56,9 @@ if(arguments$args == 'QC' | arguments$args == 'counts') {
 
 
 
-#running rnaseq wrapper
+#running counts_rnaseq wrapper
 if(arguments$args == 'counts') {
-rna_wrapper(fq.dir = arguments$options$fqdir,
+counts_rnaseq(fq.dir = arguments$options$fqdir,
                          trim.dir= arguments$options$trimdir,
                          genomedir = arguments$options$genomeindexdir,
                          annotation.gtf = arguments$options$annotationgtf,

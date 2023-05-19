@@ -206,7 +206,7 @@ htseq_count = function (
     samples=fastq_files[[5]])
                         {
   
-     htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --nonunique all --format=bam --mode=intersection-nonempty --stranded=yes -n ',threads,' --idattr=gene_id ',file.path(out.dir,'alignments','*sortN.bam'),' ',annotation.gtf, ' >',file.path(out.dir,'htseq_counts.tsv'),' 2>',file.path(out.dir,'logs','htseq.err'))
+     htseq1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --nonunique all --format=bam --mode=intersection-nonempty --stranded=no -n ',threads,' --idattr=gene_id ',file.path(out.dir,'alignments','*sortN.bam'),' ',annotation.gtf, ' >',file.path(out.dir,'htseq_counts.tsv'),' 2>',file.path(out.dir,'logs','htseq.err'))
  #   htseq2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=reverse --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_reverse,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
  #   htseq3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'htseq-count --format=bam --mode=intersection-nonempty --stranded=no --idattr=gene_id ',bam_nounmapped_sort,' ',annotation.gtf, ' >',htseq_onstranded,' 2>>',file.path(out.dir,'logs'),'/htseq.err')
 

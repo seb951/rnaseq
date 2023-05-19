@@ -46,7 +46,7 @@ option_list = list(
 
 #
 parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
-arguments <- parse_args(parser,args ='counts',positional_arguments = 1)
+arguments <- parse_args(parser,positional_arguments = 1)
 
 if(arguments$args == 'QC' | arguments$args == 'counts') {
   sprintf("Running command ( %s )", arguments$args)

@@ -83,86 +83,25 @@ names(files) = list.files(paste0(dir, "kallisto"))
 txi = tximport(files, type = "kallisto", tx2gene = tx2gene, 
                txIn = TRUE, txOut = FALSE, countsFromAbundance = "lengthScaledTPM",  ignoreTxVersion = TRUE, ignoreAfterBar=TRUE)
 
-#=====================
-#Create DESeqDataSet object
-#=====================
-dds = DESeq2::DESeqDataSetFromTximport(txi, colData = sampleTable)
-#ERROR if (all(assay(se) == 0)) {
-#stop("all samples have 0 counts for all genes. check the counting script.")
-
-#Differential expression analysis
-dds = DESeq(dds)
-res = results(dds, name = "Sain vs tumeur", alpha = 0.05)
-
-#=====================
-#Generating plots
-#=====================
-#count data transformation with variance stabilizing transformations (vst)
-variance = vst(dds)
-# PCA_plot (Principal Componenet Analysis)
-pcaData = plotPCA(vst, intgroup=c("Name","Sain vs tumeur"), 
-                  returnData=TRUE)
-percentVar = round(100 * attr(pcaData, "percentVar"))
-
-png("DGE_PCA-vst.kallisto.png", width=7, height=7, units = "in", res = 300)
-ggplot2::ggplot(pcaData, aes(PC1, PC2, colour = paris_classification)) + 
-    geom_point(size = 2) +theme_bw() + scale_color_manual(values = c("blue", "red")) +
-    geom_text_repel(aes(label = individual), nudge_x = -1, nudge_y = 0.2, size = 3) +
-    ggtitle("Principal Component Analysis (PCA)", subtitle = "vst transformation") +
-    xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-    ylab(paste0("PC2: ",percentVar[2],"% variance"))
-dev.off()
-
-#Volcano_plot for DGE
-pCutoff = 0.05
-FCcutoff = 1.0
-
-p = EnhancedVolcano(data.frame(res), lab = NA, x = 'log2FoldChange', y = 'padj',
-                    xlab = bquote(~Log[2]~ 'fold change'), ylab = bquote(~-Log[10]~adjusted~italic(P)),
-                    pCutoff = pCutoff, FCcutoff = FCcutoff, pointSize = 1.0, labSize = 2.0,
-                    title = "Volcano plot", subtitle = "SSA/P vs. Normal",
-                    caption = paste0('log2 FC cutoff: ', FCcutoff, '; p-value cutoff: ', pCutoff, '\nTotal = ', nrow(res), ' variables'),
-                    legend=c('NS','Log2 FC','Adjusted p-value', 'Adjusted p-value & Log2 FC'),
-                    legendPosition = 'bottom', legendLabSize = 14, legendIconSize = 5.0)
-
-png("DGE_VolcanoPlots.kallisto.png", width=7, height=7, units = "in", res = 300)
-print(p)
-dev.off()
-
-
-
 
 #==============================================
-# OTHER ALTERNATIVE
+# Sleuth
 #==============================================
-
-
-# Script from : https://pachterlab.github.io/sleuth_walkthroughs/trapnell/analysis.html
-#=====================
-#Path kallisto results
-#=====================
+#Path to kallisto results
 dir = "/data/"
-sample_id <- dir(file.path("/data/kallisto"))
-kal_dirs <- file.path("/data/kallisto", sample_id)
+sample_id = dir(file.path("/data/kallisto"))
+kal_dirs = file.path("/data/kallisto", sample_id)
 kal_dirs
 
-#=====================
-#SampleTable (infos samples assiciated with kallisto quant)
-#=====================
+#SampleTable (infos samples associated with kallisto quant)
 s2c = read.table(file.path("/data/", "sampleTable.txt"), header = TRUE, stringsAsFactors=FALSE)
 s2c = dplyr::select(s2c, sample = Name, Type)
-s2c
-
 s2c = dplyr::mutate(s2c, path = kal_dirs)
 
-#=====================
 #Initialize sleuth object
-#=====================
 so = sleuth_prep(s2c, extra_bootstrap_summary = TRUE)
 
-#=====================
 #Including gene names for transcript-level analysis
-#=====================
 #Collect gene names
 mart = biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                         dataset = "hsapiens_gene_ensembl",

@@ -3,22 +3,29 @@ source('R/counts_functions.R')
 library(data.table)
 library(GenomicFeatures)
 library(tximport)
-library(DESeq2)
-library(apeglm)
 library(ggplot2)
 library(ggrepel)
 library(rhdf5)
 library(GenomicState)
-library(EnhancedVolcano)
 #=====================
 ###get sequences ready
 #=====================
-sequences()
+sequences(fq.dir='data/fastq',
+          trim.dir='out/fastq.trim',
+          out.dir = 'out/')
 
 #=====================
 ###trimming
 #=====================
-trimming()
+trimming(trim.dir = 'out/fastq.trim',
+         R1 = sequences()[[1]][1],
+         R2 = sequences()[[2]][1],
+         out_seq = sequences()[[4]][1],
+         adaptor1='AGATCGGAAGAGCACACGTCTGAACTCCAGTCA',
+         adaptor2='AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT',
+         cutadapt = '/usr/bin/cutadapt',
+         i=1,
+         out.dir=out.dir)
 #=====================
 #Pseudo-mapping step
 #=====================

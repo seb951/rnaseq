@@ -90,10 +90,9 @@ txi = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene,
 dir = "/data/"
 sample_id = dir(file.path("/data/kallisto"))
 kal_dirs = file.path("/data/kallisto", sample_id)
-kal_dirs
 
 #SampleTable (info of samples associated with kallisto quant)
-s2c = read.table(file.path("/data/", "sampleTable.txt"), header = TRUE, stringsAsFactors=FALSE)
+s2c = read.table(file.path("/data", "sampleTable.txt"), header = TRUE, stringsAsFactors=FALSE)
 s2c = dplyr::select(s2c, sample = Name, Type)
 s2c = dplyr::mutate(s2c, path = kal_dirs)
 

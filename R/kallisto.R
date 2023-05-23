@@ -97,12 +97,12 @@ s2c = dplyr::select(s2c, sample = Name, Type)
 s2c = dplyr::mutate(s2c, path = kal_dirs)
 
 #Initialize sleuth object
-so = sleuth_prep(s2c, extra_bootstrap_summary = TRUE)
+so = sleuth::sleuth_prep(s2c, read_bootstrap_tpm = TRUE)
 
 #Including gene names for transcript-level analysis
 mart = biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                         dataset = "hsapiens_gene_ensembl",
-                        host = 'ensembl.org')
+                        host = 'https:///www.ensembl.org')
 
 t2g = biomaRt::getBM(attributes = c("ensembl_transcript_id","ensembl_transcript_id_version", "ensembl_gene_id",
                                     "ensembl_gene_id_version","external_gene_name","description",
@@ -116,18 +116,18 @@ t2g = dplyr::rename(t2g, target_id = ensembl_transcript_id,
 t2g = dplyr::select(t2g, c('target_id', 'ens_gene', 'ext_gene'))
 
 #Adding gene names to sleuth table
-so = sleuth_prep(s2c, target_mapping = t2g)
+so = sleuth::sleuth_prep(s2c, target_mapping = t2g)
 
 #fitting measurement error models
-so = sleuth_fit(so, ~1, 'reduced')
-so = sleuth_lrt(so, 'reduced', 'reduced')
+so = sleuth::sleuth_fit(so, ~1, 'reduced')
+so = sleuth::sleuth_lrt(so, 'reduced', 'reduced')
 
 #PCA plot
-plot_pca(so, color_by = 'Type')
+sleuth::plot_pca(so, color_by = 'Type')
 
 #Group density plot for count distribution/sample type
-plot_group_density(so, use_filtered = TRUE, units = "tpm",
-                   trans = "log", grouping = setdiff(colnames(so$sample_to_covariates),
-                                                     "sample"), offset = 1)
+sleuth::plot_group_density(so, use_filtered = TRUE, units = "tpm",
+                           trans = "log", grouping = setdiff(colnames(so$sample_to_covariates),
+                                                             "sample"), offset = 1)
 
 #View results with sleuth_live(so)

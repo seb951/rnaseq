@@ -6,13 +6,12 @@ source('R/counts_functions.R')
 #Pseudo-mapping step
 #=====================
 kallisto = function(R1_trim = sequences()[[3]][1],
-                   R2_trim = sequences()[[4]][1],
-                   in.dir = file.path('data/index/'),
-                   out.dir = file.path('data/kallisto/'),
-                   out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_')
-                   ) 
+                    R2_trim = sequences()[[4]][1],
+                    in.dir = file.path('data/index/'),
+                    out.dir = file.path('data/kallisto/'),
+                    out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_')) 
     {
-    #if trimming not done 
+    #if sequences not trimmed
     if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),file.path('out/fastq.trim'))))==0)
         {
         #=====================
@@ -36,12 +35,12 @@ kallisto = function(R1_trim = sequences()[[3]][1],
                  out.dir=out.dir)
         }
     
-    #index cmd, index downloaded from here: https://www.gencodegenes.org/human/
-    index = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i ', in.dir, 'gencode.v43.transcripts.idx ', in.dir, 'gencode.v43.transcripts.fa.gz')
+    #index cmd, index downloaded from here: https://www.gencodegenes.org/human/ (gencode.v43.transcripts.idx)
+    index = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i ', in.dir, 'chr1.idx ', in.dir, 'chr1.fa.gz')
     system(index)
     
     #kallisto cmd
-    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i ', in.dir, 'gencode.v43.transcripts.idx -o ',
+    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i ', in.dir, 'chr1.idx -o ',
                  out.dir,
                  ' -b 100 ', 
                  in.dir ,

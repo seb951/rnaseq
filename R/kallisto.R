@@ -56,15 +56,15 @@ kallisto = function(R1_trim = sequences()[[3]][1],
     
     # message(cmd)
     message(paste0('Done Kallisto, Time is: ',Sys.time()))
-    
-    return('')
 }
 
 
 #=====================
 #Load kallisto data
 #=====================
-load_data = function(in.dir = ("/data/"))
+load_data = function(in.dir = "/data/",
+                     sample_id = dir(file.path("/data/kallisto")),
+                     kal_dirs = file.path("/data/kallisto", sample_id))
     
 {
     #Grep info from run file csv & covert to txt
@@ -85,20 +85,16 @@ load_data = function(in.dir = ("/data/"))
     tx2gene$TXNAME = sapply(strsplit(tx2gene$TXNAME,".",fixed = T), `[`, 1)
     
     #Load kallisto data
-    files = file.path(paste0(dir, "kallisto"), list.files(paste0(dir, "kallisto")), "abundance.h5")
-    names(files) = list.files(paste0(dir, "kallisto"))
+    files = file.path(paste0(in.dir, "kallisto"), list.files(paste0(in.dir, "kallisto")), "abundance.h5")
+    names(files) = list.files(paste0(in.dir, "kallisto"))
     
     #import abundance.h5 files
     txi = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, 
                              txIn = TRUE, txOut = FALSE, countsFromAbundance = "lengthScaledTPM",  ignoreTxVersion = TRUE, ignoreAfterBar=TRUE)
     
     # Sleuth
-    #Path to kallisto results
-    sample_id = dir(file.path("/data/kallisto"))
-    kal_dirs = file.path("/data/kallisto", sample_id)
-    
     #SampleTable (info of samples associated with kallisto quant)
-    s2c = read.table(file.path("/data", "sampleTable.txt"), header = TRUE, stringsAsFactors=FALSE)
+    s2c = read.table(file.path(in.dir, "sampleTable.txt"), header = TRUE, stringsAsFactors=FALSE)
     s2c = dplyr::select(s2c, sample = Name, Type)
     s2c = dplyr::mutate(s2c, path = kal_dirs)
     
@@ -137,6 +133,10 @@ load_data = function(in.dir = ("/data/"))
                                trans = "log", grouping = setdiff(colnames(so$sample_to_covariates),
                                                                  "sample"), offset = 1)
     #View results with sleuth_live(so)
+    
+    
+    # message(cmd)
+    message(paste0('Done data_load, Time is: ',Sys.time()))
 }
 
 
@@ -144,15 +144,58 @@ load_data = function(in.dir = ("/data/"))
 #Wrapper: kallisto_rnaseq
 #=====================
 
-kallisto_rnaseq = function()
-{
-    #kallisto
-    kallisto(R1_trim = sequences()[[3]][1],
-             R2_trim = sequences()[[4]][1],
-             in.dir = file.path('data/index/'),
-             out.dir = file.path('data/kallisto/'),
-             out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_'))
+kallisto_rnaseq = function(fq.dir = params$fq.dir,
+                           trim.dir= params$trim.dir,
+                           sample_id = params$sample_id,
+                           kal_dirs = params$kal_dirs,
+                           in.dir = params$in.dir,
+                           out.dir = params$out.dir,
+                           cutadapt = params$cutadapt,
+                           nbfiles = params$nbfiles)
+{    
+    dir.create(out.dir,showWarnings =F)
+    dir.create(file.path(out.dir,'logs'),showWarnings =F)
+    dir.create(file.path(out.dir,'alignments'),showWarnings =F)
     
-    #load date
-    load_data(in.dir = ("/data/"))
+    
+    #fastq files
+    fastq_files = sequences(fq.dir = fq.dir,
+                            trim.dir = trim.dir,
+                            out.dir = out.dir)
+    
+    
+    #files to process depends on nbfiles parameter
+    files = seq_along(fastq_files[[5]])
+    nbfiles =  strsplit(nbfiles,',')[[1]]
+    if(nbfiles[1] == 'all') files = files
+    if(length(nbfiles) == 1 & nbfiles[1] != 'all') {files = files[1:min(length(files),as.numeric(nbfiles))]}
+    if(length(nbfiles) == 2) {files = files[as.numeric(nbfiles[1]):as.numeric(nbfiles[2])]}
+    
+    for(i in files) 
+        {
+        
+        #out_prefix
+        out_prefix = file.path(out.dir,'alignments',paste0(fastq_files[[5]][i],'_'))
+        
+        
+        #kallisto
+        kallisto(R1_trim = sequences()[[3]][1],
+                 R2_trim = sequences()[[4]][1],
+                 in.dir = file.path('data/index/'),
+                 out.dir = file.path('data/kallisto/'),
+                 out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_'))
+        
+        #load data
+        load_data(in.dir = "/data/",
+                  sample_id = dir(file.path("/data/kallisto")),
+                  kal_dirs = file.path("/data/kallisto", sample_id))
+        
+        #message
+        message(paste0('--- Done sample, ',fastq_files[[5]][i],', Time is: ',Sys.time(),' ---'))
+        }
+    
+    
+    #final cleanup
+    cleanup(out_prefix = out_prefix)
+    
 }

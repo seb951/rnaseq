@@ -69,10 +69,10 @@ load_data = function(in.dir = ("/data/"))
 {
     #Grep info from run file csv & covert to txt
     data_file = readxl::read_xlsx("/data/*.xlsx", sheet = 1, col_names = TRUE, col_types = NULL, na = "", skip = 0)
-    file.dir = file.path("/home/rv54200/Documents/TEST/")
+    file.dir = file.path("/data/")
     data_frame = write.csv(data_file, file.path(file.dir, "test.csv"))
-    df = read.csv("/home/rv54200/Documents/TEST/test.csv")
-    col = df[, c("Name...2", "Sample...5", "Type")] > "/home/rv54200/Documents/TEST/test.txt"
+    df = read.csv("/data/test.csv")
+    col = df[, c("Name...2", "Sample...5", "Type")]
     
     #Text file of run info
     sampleTable = read.delim(file.path(in.dir, "sampleTable.txt"))

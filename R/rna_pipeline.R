@@ -1,6 +1,7 @@
 Sys.setenv(RSTUDIO_PANDOC="/usr/lib/rstudio/resources/app/bin/quarto/bin/tools")
 suppressWarnings(library(optparse))
 source('R/counts_functions.R')
+source('R/kallisto.R')
 
 
 #For info, in Windows, you can call Rscript as such: C:'\Program Files\'R\R-4.2.2\bin\x64\Rscript.exe script.R
@@ -49,7 +50,7 @@ option_list = list(
 parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
 arguments <- parse_args(parser,positional_arguments = 1)
 
-if(arguments$args == 'QC' | arguments$args == 'counts') {
+if(arguments$args == 'QC' | arguments$args == 'counts' | arguments$args == 'kallisto') {
     sprintf("Running command ( %s )", arguments$args)
 } else {
     stop(sprintf("Specified command ( %s ) does not exist", arguments$args))
@@ -83,6 +84,19 @@ if(arguments$args == 'QC') {
                                                                      adapters.dir = NULL),
                       output_dir = arguments$options$outdir
     )
+}
+
+
+#running kallisto_rnaseq
+if(arguments$args == 'kallisto') {
+    kallisto_rnaseq = function(fq.dir = arguments$options$fq.dir,
+                               trim.dir = arguments$options$trim.dir,
+                               sample_id = arguments$options$sample_id,
+                               kal_dirs = arguments$options$kal_dirs,
+                               in.dir = arguments$options$in.dir,
+                               out.dir = arguments$options$out.dir,
+                               cutadapt = arguments$options$cutadapt,
+                               nbfiles = arguments$options$nbfiles)
 }
 
 

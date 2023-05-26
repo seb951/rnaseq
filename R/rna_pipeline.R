@@ -8,7 +8,7 @@ source('R/kallisto.R')
 
 #options (QC and counts)
 option_list = list(
-    make_option( "--fqdir",type="character", default='data/fastq', 
+    make_option( "--fqdir",type="character", default='data/fastq2', 
                  help="fastq directory [default %default]", metavar="character"),
     
     make_option( "--trimdir",type="character", default='out/fastq.trim', 
@@ -58,17 +58,17 @@ if(arguments$args == 'QC' | arguments$args == 'counts' | arguments$args == 'kall
 
 
 
-#running rnaseq wrapper
+#running counts_rnaseq wrapper
 if(arguments$args == 'counts') {
-    rna_wrapper(fq.dir = arguments$options$fqdir,
-                trim.dir= arguments$options$trimdir,
-                genomedir = arguments$options$genomeindexdir,
-                annotation.gtf = arguments$options$annotationgtf,
-                genomefasta = arguments$options$genomefasta,
-                out.dir = arguments$options$outdir,
-                cutadapt=arguments$options$cutadapt,
-                threads= arguments$options$threads,
-                nbfiles= arguments$options$nbfiles
+    counts_rnaseq(fq.dir = arguments$options$fqdir,
+                  trim.dir= arguments$options$trimdir,
+                  genomedir = arguments$options$genomeindexdir,
+                  annotation.gtf = arguments$options$annotationgtf,
+                  genomefasta = arguments$options$genomefasta,
+                  out.dir = arguments$options$outdir,
+                  cutadapt=arguments$options$cutadapt,
+                  threads= arguments$options$threads,
+                  nbfiles= arguments$options$nbfiles
     )
 }
 
@@ -86,9 +86,10 @@ if(arguments$args == 'QC') {
     )
 }
 
-
+ 
 #running kallisto_rnaseq
-if(arguments$args == 'kallisto') {
+if(arguments$args == 'kallisto') 
+{
     kallisto_rnaseq = function(fq.dir = arguments$options$fq.dir,
                                trim.dir = arguments$options$trim.dir,
                                sample_id = arguments$options$sample_id,
@@ -98,6 +99,5 @@ if(arguments$args == 'kallisto') {
                                cutadapt = arguments$options$cutadapt,
                                nbfiles = arguments$options$nbfiles)
 }
-
 
 #running another module here:

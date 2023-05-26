@@ -5,11 +5,12 @@ source('R/counts_functions.R')
 #=====================
 #Pseudo-mapping step
 #=====================
-kallisto = function(R1_trim = sequences()[[3]][1],
+kallisto = function(fastq.dir = file.path('out/fastq.trim/'),
+                    R1_trim = sequences()[[3]][1],
                     R2_trim = sequences()[[4]][1],
                     in.dir = file.path('data/index/'),
                     out.dir = file.path('data/kallisto/'),
-                    out_prefix = paste0('rnaseq/out/',sequences()[[5]][1],'_')) 
+                    out_prefix = paste0('kallisto/out/',sequences()[[5]][1],'_')) 
     {
     #if sequences not trimmed
     if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),file.path('out/fastq.trim'))))==0)
@@ -36,6 +37,7 @@ kallisto = function(R1_trim = sequences()[[3]][1],
         }
     
     #index cmd, index downloaded from here: https://www.gencodegenes.org/human/ (gencode.v43.transcripts.idx)
+    #--make-unique before .fa.gz file
     index = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i ', in.dir, 'chr1.idx ', in.dir, 'chr1.fa.gz')
     system(index)
     
@@ -43,13 +45,13 @@ kallisto = function(R1_trim = sequences()[[3]][1],
     cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i ', in.dir, 'chr1.idx -o ',
                  out.dir,
                  ' -b 100 ', 
-                 in.dir ,
+                 fastq.dir,
                  R1_trim,
                  ' ',
-                 in.dir,
-                 R2_trim,
-                 ' ',
-                 out_prefix,' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.err')
+                 fastq.dir,
+                 R2_trim)
+                 #' ',
+                 #,1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/kallisto.err')
     
     system(cmd)
     
@@ -61,7 +63,7 @@ kallisto = function(R1_trim = sequences()[[3]][1],
 #=====================
 #Load kallisto data
 #=====================
-load_data = function(in.dir = "/data/",
+load_data = function(in.dir = "/data",
                      sample_id = dir(file.path("/data/kallisto")),
                      kal_dirs = file.path("/data/kallisto", sample_id))
     

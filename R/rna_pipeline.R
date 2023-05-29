@@ -89,15 +89,34 @@ if(arguments$args == 'QC') {
  
 #running kallisto_rnaseq
 if(arguments$args == 'kallisto') 
-{
-    kallisto_rnaseq = function(fq.dir = arguments$options$fq.dir,
-                               trim.dir = arguments$options$trim.dir,
-                               sample_id = arguments$options$sample_id,
-                               kal_dirs = arguments$options$kal_dirs,
-                               in.dir = arguments$options$in.dir,
-                               out.dir = arguments$options$out.dir,
-                               cutadapt = arguments$options$cutadapt,
-                               nbfiles = arguments$options$nbfiles)
-}
+    {
+    #if sequences not trimmed
+    if(dir.exists(file.path('out/fastq.trim/'))==F)
+        {
+        #=====================
+        ###get sequences ready
+        #=====================
+        sequences(fq.dir='data/fastq',
+                  trim.dir='out/fastq.trim',
+                  out.dir = 'out/')
+        
+        #=====================
+        ###trimming
+        #=====================
+        trimming(trim.dir = 'out/fastq.trim',
+                 R1 = sequences()[[1]][1],
+                 R2 = sequences()[[2]][1],
+                 out_seq = sequences()[[4]][1],
+                 adaptor1='AGATCGGAAGAGCACACGTCTGAACTCCAGTCA',
+                 adaptor2='AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT',
+                 cutadapt = '/usr/bin/cutadapt',
+                 i=1,
+                 out.dir=out.dir)
+        }
+    kallisto_rnaseq(fastq.dir = arguments$options$fastq.dir,
+                    out_prefix = arguments$options$out_prefix,
+                    in.dir = arguments$options$in.dir,
+                    out.dir = arguments$options$out.dir)
+    }
 
 #running another module here:

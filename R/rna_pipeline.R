@@ -113,6 +113,7 @@ if(arguments$args == 'kallisto')
                  i=1,
                  out.dir=out.dir)
         }
+    
     kallisto_rnaseq(fastq.dir = arguments$options$fastq.dir,
                     out_prefix = arguments$options$out_prefix,
                     in.dir = arguments$options$in.dir,

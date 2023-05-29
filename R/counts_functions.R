@@ -127,7 +127,7 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
 # duplicates & create 
 # index
 #======================
-picardtools = function(out_prefix = 'rnaseq/out/toto_',
+picardtools = function(out_prefix = 'out/kallisto/toto_',
                        bam = paste0(out_prefix,'Aligned.sortedByCoord.out.bam'),
                        bam_added = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded.bam'),
                        bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),

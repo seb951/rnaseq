@@ -51,9 +51,9 @@ kallisto = function(fastq.dir = file.path('out/fastq.trim/'),
 #=====================
 
 kallisto_rnaseq = function(fastq.dir = params$fastq.dir,
-                           out_prefix = params$out_prefix,
                            in.dir = params$in.dir,
-                           out.dir = params$out.dir)
+                           out.dir = params$out.dir,
+                           out_prefix = params$out_prefix)
 {
     index(in.dir = file.path('data/index/'))
     
@@ -61,16 +61,16 @@ kallisto_rnaseq = function(fastq.dir = params$fastq.dir,
     trim1 = list.files(path = "out/fastq.trim/", pattern = "val_1.fq.gz")
     trim2 = list.files(path = "out/fastq.trim/", pattern = "val_2.fq.gz")
     
-    name_samples = list(unique(substr(files, 1, 20)))
+    name_samples = unique(substr(files, 1, 20))
+    
+    
+    #output directory
+    path = 'out/kallisto/'
+    out_prefix = ifelse(!dir.exists(file.path(path, paste0(name_samples[1]))), dir.create(file.path(path, paste0(name_samples[1]))), FALSE)
+    #out_prefix = dir.create(path, paste0(name_samples[1]))
     
     for(i in files)
     {
-        #output directory
-        path = 'out/kallisto/'
-        lapply(name_samples, dir.create(paste0(path, x, name_samples)))
-                       
-        #out_prefix = dir.create(paste0(path, name_samples[[c(i)]]))
-        
         #kallisto
         kallisto(fastq.dir = file.path('out/fastq.trim/'),
                  in.dir = file.path('data/index/'),
@@ -84,3 +84,4 @@ kallisto_rnaseq = function(fastq.dir = params$fastq.dir,
     }
     
 }
+

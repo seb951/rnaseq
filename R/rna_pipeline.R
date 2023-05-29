@@ -115,9 +115,9 @@ if(arguments$args == 'kallisto')
         }
     
     kallisto_rnaseq(fastq.dir = arguments$options$fastq.dir,
-                    out_prefix = arguments$options$out_prefix,
                     in.dir = arguments$options$in.dir,
-                    out.dir = arguments$options$out.dir)
+                    out.dir = arguments$options$out.dir,
+                    out_prefix = arguments$options$out_prefix)
     }
 
 #running another module here:

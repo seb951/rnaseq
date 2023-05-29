@@ -12,7 +12,6 @@ sequences = function(fq.dir='data/fastq',
     R1 = paste0(file.path(fq.dir,sample_names),'_R1.fastq.gz')
     R2 = paste0(file.path(fq.dir,sample_names),'_R2.fastq.gz')
     
-    
     R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
     R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
     
@@ -127,7 +126,7 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
 # duplicates & create 
 # index
 #======================
-picardtools = function(out_prefix = 'out/kallisto/toto_',
+picardtools = function(out_prefix = 'rnaseq/out/toto_',
                        bam = paste0(out_prefix,'Aligned.sortedByCoord.out.bam'),
                        bam_added = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded.bam'),
                        bam_rmdup = paste0(out_prefix,'trimmed_Aligned_PP_UM_rgAdded_dup.bam'),

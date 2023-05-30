@@ -1,0 +1,107 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: data/fastq2/RNA_0009_5268_Sain_R1.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.6.10
+Cutadapt version: 3.5
+Python version: 3.10.6
+Number of cores used for trimming: 4
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCA' (user defined)
+Maximum trimming error rate: 0.1 (default)
+Optional adapter 2 sequence (only used for read 2 of paired-end files): 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT'
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.5 with Python 3.10.6
+Command line parameters: -j 4 -e 0.1 -q 20 -O 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA data/fastq2/RNA_0009_5268_Sain_R1.fastq.gz
+Processing reads on 4 cores in single-end mode ...
+Finished in 0.23 s (15 µs/read; 3.88 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                  15,000
+Reads with adapters:                     5,684 (37.9%)
+Reads written (passing filters):        15,000 (100.0%)
+
+Total basepairs processed:     1,515,000 bp
+Quality-trimmed:                     639 bp (0.0%)
+Total written (filtered):      1,494,517 bp (98.6%)
+
+=== Adapter 1 ===
+
+Sequence: AGATCGGAAGAGCACACGTCTGAACTCCAGTCA; Type: regular 3'; Length: 33; Trimmed: 5684 times
+
+Minimum overlap: 1
+No. of allowed errors:
+1-9 bp: 0; 10-19 bp: 1; 20-29 bp: 2; 30-33 bp: 3
+
+Bases preceding removed adapters:
+  A: 28.9%
+  C: 30.1%
+  G: 20.9%
+  T: 20.1%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	3413	3750.0	0	3413
+2	1081	937.5	0	1081
+3	354	234.4	0	354
+4	125	58.6	0	125
+5	50	14.6	0	50
+6	42	3.7	0	42
+7	37	0.9	0	37
+8	33	0.2	0	33
+9	25	0.1	0	25
+10	26	0.0	1	23 3
+11	24	0.0	1	23 1
+12	43	0.0	1	43
+13	17	0.0	1	17
+14	31	0.0	1	31
+15	27	0.0	1	25 2
+16	22	0.0	1	21 1
+17	27	0.0	1	25 2
+18	28	0.0	1	28
+19	19	0.0	1	19
+20	20	0.0	2	20
+21	23	0.0	2	22 1
+22	16	0.0	2	16
+23	16	0.0	2	15 1
+24	15	0.0	2	15
+25	14	0.0	2	14
+26	8	0.0	2	8
+27	12	0.0	2	12
+28	14	0.0	2	14
+29	19	0.0	2	16 3
+30	9	0.0	3	8 0 1
+31	3	0.0	3	3
+32	3	0.0	3	3
+33	13	0.0	3	12 1
+34	7	0.0	3	7
+35	8	0.0	3	8
+36	11	0.0	3	11
+37	2	0.0	3	1 0 1
+38	6	0.0	3	4 1 0 1
+39	7	0.0	3	5 2
+40	5	0.0	3	5
+41	6	0.0	3	6
+42	5	0.0	3	5
+43	2	0.0	3	2
+44	4	0.0	3	4
+45	3	0.0	3	2 1
+47	2	0.0	3	2
+48	2	0.0	3	2
+49	1	0.0	3	1
+54	1	0.0	3	1
+56	2	0.0	3	2
+58	1	0.0	3	1
+
+RUN STATISTICS FOR INPUT FILE: data/fastq2/RNA_0009_5268_Sain_R1.fastq.gz
+=============================================
+15000 sequences processed in total
+

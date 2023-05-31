@@ -80,7 +80,7 @@ kallisto_rnaseq = function(fastq.dir = params$fastq.dir,
         #zip(zipfile = files_zip, files = files_zip)
         
         #message
-        message(paste0('--- Done sample, Time is: ',Sys.time(),' ---'))
+        message(paste0('--- Done sample,', name_samples[i] ,' Time is: ',Sys.time(),' ---'))
     }
     
 }

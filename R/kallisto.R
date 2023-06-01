@@ -5,36 +5,38 @@ source('R/counts_functions.R')
 #=====================
 #Pseudo-mapping step
 #=====================
-index = function(in.dir = file.path('data/index/'))
+index = function(reftrans.dir = 'data/index/chr1.fa.gz',
+                 kallindex.dir = 'data/index/chr1.idx')
 {
     #index cmd, index downloaded from here: https://www.gencodegenes.org/human/ (gencode.v43.transcripts.idx)
-    index = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i ', in.dir, 'chr1.idx', ' --make-unique ', in.dir, 'chr1.fa.gz')
-    system(index)
+    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto index -i ', kallindex.dir, ' --make-unique ', reftrans.dir)
+    system(cmd)
     
     # message(cmd)
-    message(paste0('Done index, Time is: ',Sys.time()))
+    message(paste0('Done index, Time is: ', Sys.time()))
     
 }
 
 
-kallisto = function(fastq.dir = file.path('out/fastq.trim/'),
-                    in.dir = file.path('data/index/'),
+kallisto = function(trim.dir = 'out/fastq.trim/',
+                    kallindex.dir = 'data/index/',
                     trim1 = list.files(path = "out/fastq.trim/", pattern = "val_1.fq.gz"),
                     trim2 = list.files(path = "out/fastq.trim/", pattern = "val_2.fq.gz"),
-                    out.dir = file.path('out/kallisto/'),
+                    out.dir = 'out/',
+                    quant.dir = 'out/kallisto/',
                     i = 1)
     {
     #kallisto cmd
-    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i ', in.dir, 'chr1.idx ',
+    cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'kallisto quant -i ', kallindex.dir, 'chr1.idx ',
                      '-o ',
-                     out.dir,
+                     quant.dir,
                      ' -b 100 ',
-                     fastq.dir,
+                     trim.dir,
                      trim1,
                      ' ',
-                     fastq.dir,
+                     trim.dir,
                      trim2,
-                     ' ', '1>', ifelse(i>1, '>', ''), file.path('out/logs'), '/kallisto.out 2>', ifelse(i>1, '>', ''), file.path('out/logs'), '/kallisto.err')
+                     ' ', '1>', ifelse(i>1, '>', ''), file.path(paste0(out.dir,'logs')), '/kallisto.out 2>', ifelse(i>1, '>', ''), file.path(out.dir,'logs'), '/kallisto.err')
         
         system(cmd)
         
@@ -50,31 +52,57 @@ kallisto = function(fastq.dir = file.path('out/fastq.trim/'),
 #Wrapper: kallisto_rnaseq
 #=====================
 
-kallisto_rnaseq = function(fastq.dir = params$fastq.dir,
-                           in.dir = params$in.dir,
-                           out.dir = params$out.dir,
-                           out_prefix = params$out_prefix)
+kallisto_rnaseq = function(kallindex.dir = params$kallindex.dir,
+                           reftrans.dir = params$reftrans.dir,
+                           trim.dir = params$trim.dir,
+                           quant.dir = params$quant.dir,
+                           out.dir = params$out.dir)
 {
-    index(in.dir = file.path('data/index/'))
+    if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''), file.path(trim.dir)))==0))
+        
+    {
+        #fastq files
+        fastq_files = sequences(fq.dir = 'data/fastq',
+                                trim.dir = trim.dir,
+                                out.dir = out.dir)
+        
+        #trimming
+        trimming(trim.dir = trim.dir,
+                 R1 = fastq_files[[1]][i],
+                 R2 = fastq_files[[2]][i],
+                 out_seq = fastq_files[[4]][i],
+                 cutadapt = cutadapt,
+                 i=i,
+                 out.dir = out.dir)
+    }
     
+    if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''), file.path(kallindex.dir)))==0))
+    {
+        #kallisto index
+        index(reftrans.dir = reftrans.dir,
+              kallindex.dir = kallindex.dir)
+    }
+    
+    #name of files
     trim1 = list.files(path = "out/fastq.trim/", pattern = "val_1.fq.gz")
     trim2 = list.files(path = "out/fastq.trim/", pattern = "val_2.fq.gz")
-    
     name_samples = sapply(strsplit(trim1,"_val_"), `[`, 1)
+    
     
     for(i in seq_along(name_samples)) 
     {
-        #create outpour
-        out_prefix = "out/kallisto"
-        dir.create(file.path(out_prefix, name_samples[i]), recursive = TRUE)
+        #outpout directory
+        out_prefix = dir.create(file.path("out/kallisto", name_samples[i]), recursive = TRUE)
         
-        #kallisto
-        kallisto(fastq.dir = file.path('out/fastq.trim/'),
-                 in.dir = file.path('data/index/'),
+        #kallisto cmd
+        kallisto(trim.dir = trim.dir,
+                 kallindex.dir = kallindex.dir,
                  trim1 = trim1[i],
                  trim2 = trim2[i],
-                 out.dir = file.path(out_prefix, name_samples[i]),
-                 i = 1)
+                 out.dir = out_prefix,
+                 quant.dir = quant.dir,
+                 i = i)
+        
         #zip files
         #files_zip = file.path(out_prefix, name_samples[i])
         #zip(zipfile = files_zip, files = files_zip)

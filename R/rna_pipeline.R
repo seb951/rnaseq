@@ -46,10 +46,7 @@ option_list = list(
                  help="QC argument: where is fastqc installed [default %default]", metavar="character"),
     
     ###kallisto specific inputs
-    make_option( "--reftransdir",type="character", default='data/index/chr1.fa.gz', 
-                 help="reference transcriptome index input directory [default %default]", metavar="character"),
-    
-    make_option( "--kallindexdir",type="character", default='data/index/chr1.idx', 
+    make_option( "--kallindexdir",type="character", default='data/index', 
                  help="reference transcriptome index outpout directory [default %default]", metavar="character"),
     
     make_option( "--quantdir",type="character", default='out/kallisto', 
@@ -102,7 +99,6 @@ if(arguments$args == 'kallisto')
     {
     
     kallisto_rnaseq(kallindex.dir = arguments$options$kallindex.dir,
-                    reftrans.dir = arguments$options$reftrans.dir,
                     trim.dir = arguments$options$trim.dir,
                     quant.dir = arguments$options$quant.dir,
                     out.dir = arguments$options$out.dir)

@@ -6,7 +6,7 @@ source('R/kallisto.R')
 
 #For info, in Windows, you can call Rscript as such: C:'\Program Files\'R\R-4.2.2\bin\x64\Rscript.exe script.R
 
-#options (QC and counts)
+#options (QC, counts and kallisto)
 option_list = list(
     make_option( "--fqdir",type="character", default='data/fastq2', 
                  help="fastq directory [default %default]", metavar="character"),
@@ -43,7 +43,17 @@ option_list = list(
                  help="QC argument: output directory [default %default]", metavar="character"),
     
     make_option( "--fastqc",type="character", default='fastqc', 
-                 help="QC argument: where is fastqc installed [default %default]", metavar="character")
+                 help="QC argument: where is fastqc installed [default %default]", metavar="character"),
+    
+    ###kallisto specific inputs
+    make_option( "--reftransdir",type="character", default='data/index/chr1.fa.gz', 
+                 help="reference transcriptome index input directory [default %default]", metavar="character"),
+    
+    make_option( "--kallindexdir",type="character", default='data/index/chr1.idx', 
+                 help="reference transcriptome index outpout directory [default %default]", metavar="character"),
+    
+    make_option( "--quantdir",type="character", default='out/kallisto', 
+                 help="quantifications output directory [default %default]", metavar="character")
 ) 
 
 #
@@ -90,34 +100,12 @@ if(arguments$args == 'QC') {
 #running kallisto_rnaseq
 if(arguments$args == 'kallisto') 
     {
-    #if sequences not trimmed
-    if(dir.exists(file.path('out/fastq.trim/'))==F)
-        {
-        #=====================
-        ###get sequences ready
-        #=====================
-        sequences(fq.dir='data/fastq',
-                  trim.dir='out/fastq.trim',
-                  out.dir = 'out/')
-        
-        #=====================
-        ###trimming
-        #=====================
-        trimming(trim.dir = 'out/fastq.trim',
-                 R1 = sequences()[[1]][1],
-                 R2 = sequences()[[2]][1],
-                 out_seq = sequences()[[4]][1],
-                 adaptor1='AGATCGGAAGAGCACACGTCTGAACTCCAGTCA',
-                 adaptor2='AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT',
-                 cutadapt = '/usr/bin/cutadapt',
-                 i=1,
-                 out.dir=out.dir)
-        }
     
-    kallisto_rnaseq(fastq.dir = arguments$options$fastq.dir,
-                    in.dir = arguments$options$in.dir,
-                    out.dir = arguments$options$out.dir,
-                    out_prefix = arguments$options$out_prefix)
+    kallisto_rnaseq(kallindex.dir = arguments$options$kallindex.dir,
+                    reftrans.dir = arguments$options$reftrans.dir,
+                    trim.dir = arguments$options$trim.dir,
+                    quant.dir = arguments$options$quant.dir,
+                    out.dir = arguments$options$out.dir)
     }
 
 #running another module here:

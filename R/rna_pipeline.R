@@ -1,4 +1,4 @@
-Sys.setenv(RSTUDIO_PANDOC="/usr/lib/rstudio/resources/app/bin/quarto/bin/tools")
+#Sys.setenv(RSTUDIO_PANDOC="/usr/lib/rstudio/resources/app/bin/quarto/bin/tools")
 suppressWarnings(library(optparse))
 source('R/counts_functions.R')
 source('R/kallisto.R')
@@ -46,7 +46,7 @@ option_list = list(
                  help="QC argument: where is fastqc installed [default %default]", metavar="character"),
     
     ###kallisto specific inputs
-    make_option( "--kallindexdir",type="character", default='data/index', 
+    make_option( "--idxdir",type="character", default='data/index', 
                  help="reference transcriptome index outpout directory [default %default]", metavar="character"),
     
     make_option( "--quantdir",type="character", default='out/kallisto', 
@@ -98,7 +98,7 @@ if(arguments$args == 'QC') {
 if(arguments$args == 'kallisto') 
     {
     
-    kallisto_rnaseq(kallindex.dir = arguments$options$kallindex.dir,
+    kallisto_rnaseq(idx.dir = arguments$options$idx.dir,
                     trim.dir = arguments$options$trim.dir,
                     quant.dir = arguments$options$quant.dir,
                     out.dir = arguments$options$out.dir)

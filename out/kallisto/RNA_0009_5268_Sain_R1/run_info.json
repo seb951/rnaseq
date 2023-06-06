@@ -8,6 +8,6 @@
 	"p_unique": 1.1,
 	"kallisto_version": "0.48.0",
 	"index_version": 10,
-	"start_time": "Tue May 30 11:32:13 2023",
+	"start_time": "Tue Jun  6 12:54:33 2023",
 	"call": "kallisto quant -i data/index/chr1.idx -o out/kallisto/RNA_0009_5268_Sain_R1 -b 100 out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz"
 }

@@ -3,6 +3,7 @@ source('R/counts_functions.R')
 
 #=====================
 <<<<<<< HEAD
+<<<<<<< HEAD
 #Index command
 #=====================
 index <- function(idx.dir = 'data/index/') {
@@ -48,6 +49,8 @@ kallisto <- function(trim.dir = 'out/fastq.trim/',
 
 
 =======
+=======
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
 #Pseudo-mapping step
 #=====================
 index = function(idx.dir = '/data/index/')
@@ -99,6 +102,9 @@ kallisto = function(trim.dir = '/out/fastq.trim/',
 }
 
 
+<<<<<<< HEAD
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
+=======
 >>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
 #=====================
 #Wrapper: kallisto_rnaseq
@@ -110,6 +116,7 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
                            out.dir = params$out.dir)
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
     #INCLUDE TRIM FUNCTION IF NOT DONE
     
     #create out directory
@@ -119,6 +126,8 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
     if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),idx.dir)))!=2) index(idx.dir = '/data/index/')
 
 =======
+=======
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
     #working path
 #    trim_path = paste0(sub('C:','/mnt/c', getwd()), trim.dir)
     
@@ -149,6 +158,9 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
     {
         index(idx.dir = '/data/index/')
     }
+<<<<<<< HEAD
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
+=======
 >>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
     
     #name of files
@@ -156,6 +168,7 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
     trim2 = list.files(path = "out/fastq.trim", pattern = "val_2.fq.gz")
     name_samples = sapply(strsplit(trim1,"_val_"), `[`, 1)
     
+<<<<<<< HEAD
 <<<<<<< HEAD
     
     for(i in seq_along(name_samples)) 
@@ -169,6 +182,8 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
         kallisto(trim.dir = 'out/fastq.trim',
                  idx.dir = 'data/index',
 =======
+=======
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
     for(i in seq_along(name_samples)) 
     {
         #outpout directory
@@ -178,6 +193,9 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
         #kallisto cmd
         kallisto(trim.dir = '/out/fastq.trim/',
                  idx.dir = '/data/index/',
+<<<<<<< HEAD
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
+=======
 >>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
                  trim1 = trim1[i],
                  trim2 = trim2[i],
@@ -185,7 +203,10 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
                  i = i)
         
 <<<<<<< HEAD
+<<<<<<< HEAD
         
+=======
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
 =======
 >>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
         #zip files
@@ -198,9 +219,13 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
     }
     
 <<<<<<< HEAD
+<<<<<<< HEAD
     #}
 }
 
+=======
+}
+>>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51
 =======
 }
 >>>>>>> ceb3017931d85cdb899ba9f107223053bf413e51

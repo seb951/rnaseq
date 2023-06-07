@@ -3,9 +3,7 @@ source('R/kallisto.R')
 #=====================
 #Load kallisto data
 #=====================
-load_data = function(in.dir = "data/",
-                     sample_id = dir(file.path("data/kallisto")),
-                     kal_dirs = file.path("data/kallisto", sample_id))
+gene_level = function(in.dir = "out/kallisto")
     
 {
     #Grep info from run file csv & covert to txt
@@ -26,13 +24,32 @@ load_data = function(in.dir = "data/",
     tx2gene$TXNAME = sapply(strsplit(tx2gene$TXNAME,".",fixed = T), `[`, 1)
     
     #Load kallisto data
-    files = file.path(paste0(in.dir, "kallisto"), list.files(paste0(in.dir, "kallisto")), "abundance.h5")
-    names(files) = list.files(paste0(in.dir, "kallisto"))
+    files = file.path(paste0(in.dir),list.files(in.dir, pattern = "R1"), "abundance.h5")
+    names(files) = list.files(in.dir, pattern = "R1")
+    
+    #Clean target_id column for tximport matching annotation
+    for (i in files) {
+        old_ids <- rhdf5::h5read(i, "/aux/ids")
+        new_ids <- gsub("\\|.*|:.*", " ", old_ids)
+        rhdf5::h5write(new_ids, i, "/aux/ids")
+    }
     
     #import abundance.h5 files
     txi = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, 
-                             txIn = TRUE, txOut = FALSE, countsFromAbundance = "lengthScaledTPM",  ignoreTxVersion = TRUE, ignoreAfterBar=TRUE)
+                             txIn = TRUE, txOut = FALSE, countsFromAbundance = "no",  ignoreTxVersion = TRUE, ignoreAfterBar=TRUE)
     
+    gene_level = tximport::summarizeToGene(txi, tx2gene = tx2gene, varReduce = FALSE,
+                                           ignoreTxVersion = TRUE,
+                                           ignoreAfterBar = TRUE,
+                                           countsFromAbundance = "no")
+}
+    
+    
+#=====================
+#Sleuth
+#=====================  
+sleuth = function()
+{     
     # Sleuth
     #SampleTable (info of samples associated with kallisto quant)
     s2c = read.table(file.path(in.dir, "sampleTable.txt"), header = TRUE, stringsAsFactors=FALSE)

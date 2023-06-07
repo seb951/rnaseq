@@ -1,0 +1,221 @@
+STAR version=2.7.10b
+STAR compilation time,server,dir=2022-11-01T09:53:26-04:00 :/home/dobin/data/STAR/STARcode/STAR.master/source
+STAR git: On branch master ; commit c6f8efc2c7043ef83bf8b0d9bed36bbb6b9b1133 ; diff files: CHANGES.md 
+##### Command Line:
+STAR --runMode alignReads --genomeDir data/reference_genome/chr1_small_index --readFilesCommand zcat --limitBAMsortRAM 100000000000 --readFilesIn out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz --outSAMtype BAM SortedByCoordinate --sjdbOverhang 99 --outFilterMultimapNmax 100 --outReadsUnmapped None --quantMode GeneCounts --sjdbGTFfile data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf --runThreadN 12 --outFileNamePrefix out//alignments/RNA_0009_5268_Sain_
+##### Initial USER parameters from Command Line:
+outFileNamePrefix                 out//alignments/RNA_0009_5268_Sain_
+###### All USER parameters from Command Line:
+runMode                       alignReads        ~RE-DEFINED
+genomeDir                     data/reference_genome/chr1_small_index     ~RE-DEFINED
+readFilesCommand              zcat        ~RE-DEFINED
+limitBAMsortRAM               100000000000     ~RE-DEFINED
+readFilesIn                   out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz   out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz        ~RE-DEFINED
+outSAMtype                    BAM   SortedByCoordinate        ~RE-DEFINED
+sjdbOverhang                  99     ~RE-DEFINED
+outFilterMultimapNmax         100     ~RE-DEFINED
+outReadsUnmapped              None     ~RE-DEFINED
+quantMode                     GeneCounts        ~RE-DEFINED
+sjdbGTFfile                   data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf     ~RE-DEFINED
+runThreadN                    12     ~RE-DEFINED
+outFileNamePrefix             out//alignments/RNA_0009_5268_Sain_     ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runMode                           alignReads   
+runThreadN                        12
+genomeDir                         data/reference_genome/chr1_small_index
+readFilesIn                       out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz   out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz   
+readFilesCommand                  zcat   
+limitBAMsortRAM                   100000000000
+outFileNamePrefix                 out//alignments/RNA_0009_5268_Sain_
+outReadsUnmapped                  None
+outSAMtype                        BAM   SortedByCoordinate   
+outFilterMultimapNmax             100
+sjdbGTFfile                       data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf
+sjdbOverhang                      99
+quantMode                         GeneCounts   
+
+-------------------------------
+##### Final effective command line:
+STAR   --runMode alignReads      --runThreadN 12   --genomeDir data/reference_genome/chr1_small_index   --readFilesIn out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz   out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz      --readFilesCommand zcat      --limitBAMsortRAM 100000000000   --outFileNamePrefix out//alignments/RNA_0009_5268_Sain_   --outReadsUnmapped None   --outSAMtype BAM   SortedByCoordinate      --outFilterMultimapNmax 100   --sjdbGTFfile data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf   --sjdbOverhang 99   --quantMode GeneCounts   
+----------------------------------------
+
+Number of fastq files for each mate = 1
+
+   Input read files for mate 1 :
+-rw-rw-r-- 1 rv54200 rv54200 378237 May 25 15:26 out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz
+
+   readsCommandsFile:
+exec > "out//alignments/RNA_0009_5268_Sain__STARtmp/tmp.fifo.read1"
+echo FILE 0
+zcat      "out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz"
+
+
+   Input read files for mate 2 :
+-rw-rw-r-- 1 rv54200 rv54200 376029 May 25 15:26 out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz
+
+   readsCommandsFile:
+exec > "out//alignments/RNA_0009_5268_Sain__STARtmp/tmp.fifo.read2"
+echo FILE 0
+zcat      "out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz"
+
+ParametersSolo: --soloCellFilterType CellRanger2.2 filtering parameters:  3000 0.99 10
+Finished loading and checking parameters
+Reading genome generation parameters:
+### STAR   --runMode genomeGenerate      --runThreadN 12   --genomeDir data/reference_genome/chr1_small_index   --genomeFastaFiles data/reference_genome/chr1_small.fa      --genomeSAindexNbases 12   --sjdbGTFfile data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf   --sjdbOverhang 99
+### GstrandBit=32
+versionGenome                 2.7.4a     ~RE-DEFINED
+genomeType                    Full     ~RE-DEFINED
+genomeFastaFiles              data/reference_genome/chr1_small.fa        ~RE-DEFINED
+genomeSAindexNbases           12     ~RE-DEFINED
+genomeChrBinNbits             18     ~RE-DEFINED
+genomeSAsparseD               1     ~RE-DEFINED
+genomeTransformType           None     ~RE-DEFINED
+genomeTransformVCF            -     ~RE-DEFINED
+sjdbOverhang                  99     ~RE-DEFINED
+sjdbFileChrStartEnd           -        ~RE-DEFINED
+sjdbGTFfile                   data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf     ~RE-DEFINED
+sjdbGTFchrPrefix              -     ~RE-DEFINED
+sjdbGTFfeatureExon            exon     ~RE-DEFINED
+sjdbGTFtagExonParentTranscripttranscript_id     ~RE-DEFINED
+sjdbGTFtagExonParentGene      gene_id     ~RE-DEFINED
+sjdbInsertSave                Basic     ~RE-DEFINED
+genomeFileSizes               808322   3809193        ~RE-DEFINED
+Genome version is compatible with current STAR
+Number of real (reference) chromosomes= 1
+1	chr1	599940	0
+Started loading the genome: Fri May 26 09:30:51 2023
+
+Genome: size given as a parameter = 808322
+SA: size given as a parameter = 3809193
+SAindex: size given as a parameter = 1
+Read from SAindex: pGe.gSAindexNbases=12  nSAi=22369620
+nGenome=808322;  nSAbyte=3809193
+GstrandBit=32   SA number of indices=923440
+Shared memory is not used for genomes. Allocated a private copy of the genome.
+Genome file size: 808322 bytes; state: good=1 eof=0 fail=0 bad=0
+Loading Genome ... done! state: good=1 eof=0 fail=0 bad=0; loaded 808322 bytes
+SA file size: 3809193 bytes; state: good=1 eof=0 fail=0 bad=0
+Loading SA ... done! state: good=1 eof=0 fail=0 bad=0; loaded 3809193 bytes
+Loading SAindex ... done: 97867203 bytes
+Finished loading the genome: Fri May 26 09:30:51 2023
+
+Processing splice junctions database sjdbN=110,   pGe.sjdbOverhang=99 
+alignIntronMax=alignMatesGapMax=0, the max intron size will be approximately determined by (2^winBinNbits)*winAnchorDistNbins=589824
+May 26 09:30:51   Loaded database junctions from the generated genome data/reference_genome/chr1_small_index//sjdbList.out.tab: 110 total junctions
+
+May 26 09:30:51 ..... processing annotations GTF
+Processing pGe.sjdbGTFfile=data/reference_genome/gencode.v43.primary_assembly.annotation_small.gtf, found:
+		74 transcripts
+		219 exons (non-collapsed)
+		110 collapsed junctions
+Total junctions: 220
+May 26 09:30:51 ..... finished GTF processing
+
+May 26 09:30:51   Finished preparing junctions
+May 26 09:30:51 ..... inserting junctions into the genome indices
+May 26 09:30:51   Finished SA search: number of new junctions=0, old junctions=110
+May 26 09:30:51   Finished sorting SA indicesL nInd=0
+Genome size with junctions=808322  786432   21890
+GstrandBit1=32   GstrandBit=32
+May 26 09:30:51   Finished inserting junction indices
+May 26 09:30:51   Finished SAi
+May 26 09:30:51 ..... finished inserting junctions into genome
+Created thread # 1
+Created thread # 2
+Created thread # 3
+Created thread # 4
+Created thread # 5
+Created thread # 6
+Created thread # 7
+Created thread # 8
+Created thread # 9
+Created thread # 10
+Created thread # 11
+Starting to map file # 0
+mate 1:   out/fastq.trim/RNA_0009_5268_Sain_R1_val_1.fq.gz
+mate 2:   out/fastq.trim/RNA_0009_5268_Sain_R2_val_2.fq.gz
+Thread #0 end of input stream, nextChar=-1
+Completed: thread #7
+Completed: thread #8
+Completed: thread #9
+Completed: thread #10
+Completed: thread #11
+Completed: thread #6
+Completed: thread #5
+Completed: thread #4
+Completed: thread #3
+Completed: thread #2
+Completed: thread #1
+BAM sorting: 0 mapped reads
+BAM sorting bins genomic start loci:
+1	0	380353456
+2	0	380353456
+3	0	380353456
+4	0	380353456
+5	0	380353456
+6	0	380353456
+7	0	380353456
+8	0	380353456
+9	0	380353456
+10	0	380353456
+11	0	380353456
+12	0	380353456
+13	0	380353456
+14	0	380353456
+15	0	380353456
+16	0	380353456
+17	0	380353456
+18	0	380353456
+19	0	380353456
+20	0	380353456
+21	0	380353456
+22	0	380353456
+23	0	380353456
+24	0	380353456
+25	0	380353456
+26	0	380353456
+27	0	380353456
+28	0	380353456
+29	0	380353456
+30	0	380353456
+31	0	380353456
+32	0	380353456
+33	0	380353456
+34	0	380353456
+35	0	380353456
+36	0	380353456
+37	0	380353456
+38	0	380353456
+39	0	380353456
+40	0	380353456
+41	0	380353456
+42	0	380353456
+43	0	380353456
+44	0	380353456
+45	0	380353456
+46	0	380353456
+47	0	380353456
+48	0	380353456
+Completed: thread #0
+Joined thread # 1
+Joined thread # 2
+Joined thread # 3
+Joined thread # 4
+Joined thread # 5
+Joined thread # 6
+Joined thread # 7
+Joined thread # 8
+Joined thread # 9
+Joined thread # 10
+Joined thread # 11
+May 26 09:30:53 ..... finished mapping
+RAM after mapping:
+VmPeak:	 4030356 kB; VmSize:	 3907516 kB; VmHWM:	 1311776 kB; VmRSS:	 1311692 kB; 
+RAM after freeing genome index memory:
+VmPeak:	 4030356 kB; VmSize:	 2009820 kB; VmHWM:	 1311776 kB; VmRSS:	 1207884 kB; 
+May 26 09:30:53 ..... started sorting BAM
+Max memory needed for sorting = 0
+WARNING: nothing to sort - no output alignments
+ALL DONE!

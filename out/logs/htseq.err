@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/rv54200/miniconda3/envs/rna_pipeline/bin/htseq-count", line 5, in <module>
+    HTSeq.scripts.count.main()
+  File "/home/rv54200/miniconda3/envs/rna_pipeline/lib/python3.7/site-packages/HTSeq/scripts/count.py", line 473, in main
+    args = _parse_sanitize_cmdline_arguments()
+  File "/home/rv54200/miniconda3/envs/rna_pipeline/lib/python3.7/site-packages/HTSeq/scripts/count.py", line 465, in _parse_sanitize_cmdline_arguments
+    _check_sam_files(args.samfilenames)
+  File "/home/rv54200/miniconda3/envs/rna_pipeline/lib/python3.7/site-packages/HTSeq/scripts/count.py", line 158, in _check_sam_files
+    with pysam.AlignmentFile(sam_filename, "r") as sf:
+  File "pysam/libcalignmentfile.pyx", line 747, in pysam.libcalignmentfile.AlignmentFile.__cinit__
+  File "pysam/libcalignmentfile.pyx", line 996, in pysam.libcalignmentfile.AlignmentFile._open
+ValueError: file has no sequences defined (mode='r') - is it SAM/BAM format? Consider opening with check_sq=False

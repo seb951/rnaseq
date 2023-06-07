@@ -1,0 +1,6 @@
+
+Error: kallisto index file not found -o
+Error: paired-end mode requires an even number of input files
+       (use --single for processing single-end reads)
+Error: need to specify output directory 
+

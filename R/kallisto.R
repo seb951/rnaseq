@@ -59,7 +59,7 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
     if (!file.exists(file.path(paste0(getwd(), quant.dir)))) dir.create(file.path(paste0(getwd(), quant.dir)))
     
     #index
-    if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),idx.dir)))!=2) index(idx.dir = '/data/index/')
+    if(length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),idx.dir)))!=2) index(idx.dir = idx.dir)
     
     
     #name of files
@@ -76,8 +76,8 @@ kallisto_rnaseq = function(idx.dir = params$idx.dir,
         out_prefix = file.path('out/kallisto', name_samples[i])
         
         #kallisto cmd
-        kallisto(trim.dir = 'out/fastq.trim',
-                 idx.dir = 'data/index',
+        kallisto(trim.dir = trim.dir,
+                 idx.dir = idx.dir,
                  trim1 = trim1[i],
                  trim2 = trim2[i],
                  quant.dir = out_prefix,

@@ -61,8 +61,8 @@ kallisto_rnaseq <- function(idx.dir = params$idx.dir,
     name_samples <- sapply(strsplit(trim1, "_val_"), `[`, 1)
     
     for (i in seq_along(name_samples)) {
+        
         # Output directory
-        #dir.create(file.path(paste0("/out/kallisto/", name_samples[i])), recursive = TRUE)
         out_prefix = file.path('out/kallisto', name_samples[i])
         
         # Kallisto command

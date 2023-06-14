@@ -94,13 +94,13 @@ if(arguments$args == 'QC') {
 
  
 #running kallisto_rnaseq
-if(arguments$args == 'kallisto') 
-    {
-    
-    kallisto_rnaseq(idx.dir = arguments$options$idx.dir,
-                    trim.dir = arguments$options$trim.dir,
-                    quant.dir = arguments$options$quant.dir,
-                    out.dir = arguments$options$out.dir)
+if (arguments$args == 'kallisto') {
+    kallisto_rnaseq(
+        idx.dir = arguments$options$idxdir,
+        trim.dir = arguments$options$trimdir,
+        quant.dir = arguments$options$quantdir,
+        out.dir = arguments$options$outdir
+    )
 }
 
 #running another module here:

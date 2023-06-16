@@ -12,10 +12,15 @@ sequences = function(fq.dir='data/fastq',
     R1 = paste0(file.path(fq.dir,sample_names),'_R1.fastq.gz')
     R2 = paste0(file.path(fq.dir,sample_names),'_R2.fastq.gz')
     
-    
     R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
     R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
     
+    if(file.exists(trim.dir)) {
+    message('It appears that your trimdir is not empty, I will list what is in there in output[[2]],[[3]] & [[4]]')
+    R1_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R1_val_1.fq.gz$'))
+    R2_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R2_val_2.fq.gz$'))
+    sample_names = unique(gsub('_R1_val_1.fq.gz','',list.files(trim.dir,pattern = '_R1_val_1.fq.gz$')))
+    }
     
     out.dir.length = length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out.dir))) 
     

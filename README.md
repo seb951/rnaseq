@@ -7,15 +7,16 @@
 
 
 ## Installation
-  * This requires `R`, `fastqc`, `trim_galore`, `samtools`, `STAR`, `HTseq`, `PicardTools`, `GATK` (not yet)
+  * This requires `R`, `fastqc`, `trim_galore`, `samtools`, `STAR`, `HTseq`, `PicardTools`,`Kallisto`,`GATK` (not yet)
   * Requires some specific `R` libraries as well (see in [R/](R/)).
   * Requires a genome (.gff, .fasta), if the genome is not indexed, `STAR` will do it.
+  * Requires a transcriptome (.fa.gz), if the transcriptome is not indexed, `Kallisto` will do it.
 
 
 ## Basic usage
   * (Note that currently, some options are **QC** or **counts** specific)
 ``` bash
-Usage: R/rna_pipeline.R [options] QC/counts
+Usage: R/rna_pipeline.R [options] QC/counts/kallisto
 
 
 Options:
@@ -63,10 +64,8 @@ Options:
 ## TO DO 
   * urgent:
     * verify that a minimal example exists for **QC** and **counts**
-    * avoid rerunning steps and clean-up temp files (**counts**)
     * integrate `gatk` and check the validaty of `STAR` options.
   * not-so-urgent:
-    * [Kallisto module](https://pachterlab.github.io/kallisto/about) to compare with the STAR/htseq approach.
     * unit-test the functions, better handling of parameters
 
     

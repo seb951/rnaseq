@@ -45,8 +45,8 @@ option_list = list(
                  help="QC argument: where is fastqc installed [default %default]", metavar="character"),
     
     ###kallisto specific inputs
-    make_option( "--idxdir",type="character", default='data/index', 
-                 help="reference transcriptome index outpout directory [default %default]", metavar="character"),
+    make_option( "--reftranscriptome",type="character", default='data/reference_transcriptome/chr1.fasta.gz', 
+                 help="reference transcriptome  [default %default]", metavar="character"),
     
     make_option( "--quantdir",type="character", default='out/kallisto', 
                  help="quantifications output directory [default %default]", metavar="character")
@@ -96,11 +96,8 @@ if(arguments$args == 'QC') {
 #running kallisto_rnaseq
 if (arguments$args == 'kallisto') {
     kallisto_rnaseq(
-        idx.dir = arguments$options$idxdir,
         trim.dir = arguments$options$trimdir,
         quant.dir = arguments$options$quantdir,
-        out.dir = arguments$options$outdir
+        ref.transcriptome = arguments$options$reftranscriptome,
     )
 }
-
-#running another module here:

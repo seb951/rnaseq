@@ -239,10 +239,10 @@ cleanup = function (out.dir = 'out/alignments')
     rm_cmd3 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded_dup.ba*')
     rm_cmd4 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded_dup_split_sortP.bam*')
     rm_cmd5 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortP.bam*')
-    rm_cmd6 = paste0('rm -r',out.dir,'/alignments/*__STARgenome')
+    rm_cmd6 = paste0('rm -r ',out.dir,'/alignments/*__STARgenome')
     rm_cmd7 = paste0('rm ',out.dir,'/alignments/*ReadsPerGene.out.tab')
 
-    system(rm_cmd1);system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5)
+    system(rm_cmd1);system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5);system(rm_cmd6);system(rm_cmd7)
 
     message(paste0('Done cleanup of temporary (bam) because they are really big, Time is: ',Sys.time()))
     return('')

@@ -15,7 +15,7 @@ sequences = function(fq.dir='data/fastq',
     R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
     R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
     
-    if(file.exists(trim.dir)) {
+    if(length(list.files(trim.dir)>0)) {
     message('It appears that your trimdir is not empty, I will list what is in there in output[[2]],[[3]] & [[4]]')
     R1_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R1_val_1.fq.gz$'))
     R2_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R2_val_2.fq.gz$'))
@@ -231,11 +231,19 @@ htseq_count = function (
 #======================
 # cleanup 
 #======================
-cleanup = function (out_prefix = 'out/toto_')
+cleanup = function (out.dir = 'out/alignments')
 {
-    message(paste0('Done cleanup (nothing yet), Time is: ',Sys.time()))
-    
-    #return()
+
+    rm_cmd1 = paste0('rm ',out.dir,'/alignments/*Aligned.sortedByCoord.out.bam*')
+    rm_cmd2 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded.bam*')
+    rm_cmd3 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded_dup.bam*')
+    rm_cmd4 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded_dup_split_sortP.bam*')
+    rm_cmd5 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortP.bam*')
+
+    system(rm_cmd1);system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5)
+
+    message(paste0('Done cleanup of temporary bam biles because they are really big), Time is: ',Sys.time()))
+    return('')
 }
 
 
@@ -315,7 +323,9 @@ counts_rnaseq = function(fq.dir = params$fq.dir,
                 samples = fastq_files[[5]][files])
     
     #final cleanup
-    cleanup(out_prefix = out_prefix)
+    cleanup(out.dir = out.dir)
     
 }
+
+
 

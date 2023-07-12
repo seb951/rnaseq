@@ -235,10 +235,10 @@ cleanup = function (out.dir = 'out/alignments')
 {
 
     rm_cmd1 = paste0('rm ',out.dir,'/alignments/*Aligned.sortedByCoord.out.bam*')
-    rm_cmd2 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded.bam*')
-    rm_cmd3 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded_dup.bam*')
-    rm_cmd4 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded_dup_split_sortP.bam*')
-    rm_cmd5 = paste0('rm ',out.dir,'/alignments/rm *Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortP.bam*')
+    rm_cmd2 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded.bam*')
+    rm_cmd3 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded_dup.bam*')
+    rm_cmd4 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded_dup_split_sortP.bam*')
+    rm_cmd5 = paste0('rm ',out.dir,'/alignments/*Aligned_PP_UM_rgAdded_dup_split_noUnmapped_sortP.bam*')
 
     system(rm_cmd1);system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5)
 

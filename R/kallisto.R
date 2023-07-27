@@ -70,7 +70,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
         #Kallisto quant command
         kallisto(trim1 = trim1[i],
                  trim2 = trim2[i],
-                 quant.dir =  file.path('out/kallisto', sequencing_files[[5]][i]),
+                 quant.dir =  file.path(quant.dir, sequencing_files[[5]][i]),
                  ref.transcriptome = ref.transcriptome,
                  i = i)
         

@@ -61,6 +61,22 @@ Options:
 
 ```
 
+## EXAMPLES
+``` bash
+Rscript R/rna_pipeline.R kallisto --reftranscriptome data/reference_transcriptome/chr1.fasta.gz --quantdir out/kallisto --trimdir out/fastq.trim
+
+Rscript R/rna_pipeline.R counts \
+--cutadapt /mnt/sde/renseb01/miniconda3/envs/Rbase/bin/cutadapt \
+--fqdir /mnt/sde/renseb01/Documents/rnaseq/data/fastq/ \
+--trimdir /mnt/sde/renseb01/Documents/rnaseq/out/fastq.trim \
+--outdir /mnt/sde/renseb01/Documents/rnaseq/out/ \
+--threads 30 \
+--genomeindexdir data/reference_genome/GRCh38/ \
+--annotationgtf data/reference_genome/gencode.v43.basic.annotation.gtf \
+--nbfiles all \
+--genomefasta data/reference_genome/GRCh38.primary_assembly.genome.fa
+
+```
 ## TO DO 
   * urgent:
     * verify that a minimal example exists for **QC** and **counts**

@@ -1,6 +1,8 @@
 # kallisto function
 source('R/counts_functions.R')
 
+#libraries needed: GenomicFeatures, AnnotationDbi, tximport & DESeq2
+
 #=====================
 # Index command
 #=====================
@@ -17,6 +19,7 @@ index <- function(ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.g
     
     # Print message
     message(paste0('Done Kallisto indexing, Time is: ', Sys.time()))
+    return('')
 }
 
 
@@ -53,6 +56,7 @@ kallisto <- function(trim1 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz
     
     # Print message
     message(paste0('Done Kallisto count, Time is: ', Sys.time()))
+    return('')
 }
 
 
@@ -97,6 +101,9 @@ tximp_counts = function(gtf.dir = "data/reference_genome/gencode.v33.annotation.
     kal_count = kal_count[- 1, ] 
     colnames(kal_count) = c('GENE_ID',names(files))
     write.table(kal_count,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    
+    # Print message
+    message(paste0('Done tximport, Time is: ', Sys.time()))
 }
 
 

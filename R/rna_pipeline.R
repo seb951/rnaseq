@@ -60,11 +60,18 @@ option_list = list(
                  help="CTAT genome library plug-and-play [default %default]", metavar="character"),
     
     ###cnv specific inputs
-    make_option( "--cytobanddir",type="character", default='data/cnv/cytoband/cytoBand.txt', 
+    make_option( "--cytobanddir",type="character", default='data/cnv/cytoband/cytoBand.txt',
                  help="Cytoband information directory [default %default]", metavar="character"),
     
-    make_option( "--centromeredir",type="character", default='data/cnv/centromere/centromere.txt', 
-                 help="Centromere information directory [default %default]", metavar="character")
+    make_option( "--centromeredir",type="character", default='data/cnv/centromere/cytoBand.txt', 
+                 help="Centromere information directory [default %default]", metavar="character"),
+    
+    make_option( "--cnvdir",type="character", default='out/cnv', 
+                 help="cnv output directory [default %default]", metavar="character"),
+    
+    make_option( "--countsdir",type="character", default='out/gene_counts',
+                 help="Count files directory [default %default]", metavar="character")
+    
 ) 
 
 #
@@ -125,11 +132,10 @@ if (arguments$args == 'fusion') {
     )
 }
 
-#running fusion_rnaseq
+#running cnv_rnaseq
 if (arguments$args == 'cnv') {
     cnv_rnaseq(cytoband.dir = arguments$options$cytobanddir,
                centromere.dir = arguments$options$centromeredir,
                counts.dir = arguments$options$countsdir,
-               out.dir = arguments$options$outdir
-    )    
+               cnv.dir = arguments$options$cnvdir)    
 }

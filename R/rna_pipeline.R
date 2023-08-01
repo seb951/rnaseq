@@ -61,16 +61,22 @@ option_list = list(
     
     ###cnv specific inputs
     make_option( "--cytobanddir",type="character", default='data/cnv/cytoband/cytoBand.txt',
-                 help="Cytoband information directory [default %default]", metavar="character"),
+                 help="Original Cytoband information directory [default %default]", metavar="character"),
     
     make_option( "--centromeredir",type="character", default='data/cnv/centromere/cytoBand.txt', 
-                 help="Centromere information directory [default %default]", metavar="character"),
+                 help="Original Centromere information directory [default %default]", metavar="character"),
     
     make_option( "--cnvdir",type="character", default='out/cnv', 
                  help="cnv output directory [default %default]", metavar="character"),
     
     make_option( "--countsdir",type="character", default='out/gene_counts',
-                 help="Count files directory [default %default]", metavar="character")
+                 help="Count files directory [default %default]", metavar="character"),
+    
+    make_option( "--cytodir",type="character", default='data/cnv/cytoband/cytoband.txt',
+                 help="Final Cytoband information directory [default %default]", metavar="character"),
+    
+    make_option( "--centrodir",type="character", default='data/cnv/centromere/centromere.txt', 
+                 help="Final Centromere information directory [default %default]", metavar="character")
     
 ) 
 
@@ -124,17 +130,18 @@ if (arguments$args == 'kallisto') {
 }
 #running fusion_rnaseq
 if (arguments$args == 'fusion') {
-    fusion_rnaseq(
-        ctat.dir = arguments$options$ctatdir,
-        ctat.lib = arguments$options$ctatlib,
-        trim.dir = arguments$options$trimdir,
-        out.dir = arguments$options$outdir
+    fusion_rnaseq(ctat.dir = arguments$options$ctatdir,
+                  ctat.lib = arguments$options$ctatlib,
+                  trim.dir = arguments$options$trimdir,
+                  out.dir = arguments$options$outdir
     )
 }
 
 #running cnv_rnaseq
 if (arguments$args == 'cnv') {
-    cnv_rnaseq(cytoband.dir = arguments$options$cytobanddir,
+    cnv_rnaseq(cyto.dir = arguments$options$cytodir,
+               cytoband.dir = arguments$options$cytobanddir,
+               centro.dir = arguments$options$centrodir,
                centromere.dir = arguments$options$centromeredir,
                counts.dir = arguments$options$countsdir,
                cnv.dir = arguments$options$cnvdir)    

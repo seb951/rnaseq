@@ -65,6 +65,9 @@ option_list = list(
     make_option( "--ctatlib",type="character", default='https://data.broadinstitute.org/Trinity/CTAT_RESOURCE_LIB/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play.tar.gz', 
                  help="CTAT genome library plug-and-play [default %default]", metavar="character"),
     
+    make_option( "--CPU",type="integer", default=10, 
+                 help="Nb of CPU to use [default %default]", metavar="character"),
+    
     ###cnv specific inputs
     make_option( "--cytobanddir",type="character", default='data/cnv/cytoband/cytoBand.txt',
                  help="Original Cytoband information directory [default %default]", metavar="character"),
@@ -140,8 +143,8 @@ if (arguments$args == 'fusion') {
     fusion_rnaseq(ctat.dir = arguments$options$ctatdir,
                   ctat.lib = arguments$options$ctatlib,
                   trim.dir = arguments$options$trimdir,
-                  out.dir = arguments$options$outdir
-    )
+                  out.dir = arguments$options$outdir,
+                  CPU = arguments$options$CPU)
 }
 
 #running cnv_rnaseq

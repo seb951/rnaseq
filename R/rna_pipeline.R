@@ -51,7 +51,13 @@ option_list = list(
     
     make_option( "--quantdir",type="character", default='out/kallisto', 
                  help="quantifications output directory [default %default]", metavar="character"),
+
+    make_option( "--txdbdir",type="character", default='data/reference_transcriptome/gencode.v43.annotation.gtf', 
+                 help="txdb directory [default %default]", metavar="character"),
     
+    make_option( "--txdbfile",type="character", default='data/reference_transcriptome/gencode.v43.annotation.sqlite', 
+                 help="txdb SQL directory [default %default]", metavar="character"),
+
     ###fusion specific inputs
     make_option( "--ctatdir",type="character", default='data/ctat', 
                  help="CTAT Genome library directory [default %default]", metavar="character"),  
@@ -122,11 +128,12 @@ if(arguments$args == 'QC') {
 
 #running kallisto_rnaseq
 if (arguments$args == 'kallisto') {
-    kallisto_rnaseq(
-        trim.dir = arguments$options$trimdir,
-        quant.dir = arguments$options$quantdir,
-        ref.transcriptome = arguments$options$reftranscriptome,
-    )
+    kallisto_rnaseq(trim.dir = arguments$options$trimdir,
+                    quant.dir = arguments$options$quantdir,
+                    ref.transcriptome = arguments$options$reftranscriptome,
+                    threads = arguments$options$threads,
+                    txdb.dir = arguments$options$txdbdir,
+                    txdb.file = arguments$options$txdbfile)
 }
 #running fusion_rnaseq
 if (arguments$args == 'fusion') {

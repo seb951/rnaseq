@@ -2,11 +2,6 @@
 
 #libraries needed: CaSpER, GenomicRanges, S4Vectors & IRanges
 
-suppressPackageStartupMessages(library(GenomicRanges))
-suppressWarnings(suppressPackageStartupMessages(library(CaSpER)))
-suppressPackageStartupMessages(library(S4Vectors))
-suppressPackageStartupMessages(library(IRanges))
-
 #==================================
 ###Cytoband information
 #==================================
@@ -76,8 +71,8 @@ casper <- function(cnv.dir = 'out/cnv',
     #Generate annotation & match to counts dataframe
     centromere = read.delim(centro.dir, header=FALSE)
     
-    rannotation = generateAnnotation(id_type="ensembl_gene_id", genes=rownames(df),
-                                     ishg19=T, centromere=centromere, host="https://www.ensembl.org/")
+    rannotation = CaSpER::generateAnnotation(id_type="ensembl_gene_id", genes=rownames(df),
+                                             ishg19=T, centromere=centromere, host="https://www.ensembl.org/")
     counts_df = df[match( rannotation$Gene,rownames(df)), ]
 
     #Samples IDs (IMPORTANT!!!colnames(control.sample.ids) == colnames(counts_df))
@@ -87,10 +82,10 @@ casper <- function(cnv.dir = 'out/cnv',
     cytoband = read.delim(cyto.dir, header=TRUE)
     
     #Create CaSpER object
-    object = CreateCasperObject(raw.data=counts_df, loh.name.mapping=NULL, sequencing.type="bulk",
-                                cnv.scale=3, loh.scale=3, matrix.type="normalized", expr.cutoff=4.5,
-                                annotation=rannotation, method="iterative", loh=NULL, filter="median", 
-                                control.sample.ids=control.sample.ids, cytoband=cytoband, genomeVersion="hg38")
+    object = CaSpER::CreateCasperObject(raw.data=counts_df, loh.name.mapping=NULL, sequencing.type="bulk",
+                                        cnv.scale=3, loh.scale=3, matrix.type="normalized", expr.cutoff=4.5,
+                                        annotation=rannotation, method="iterative", loh=NULL, filter="median",
+                                        control.sample.ids=control.sample.ids, cytoband=cytoband, genomeVersion="hg38")
     #Run CaSpER object
     final.objects <- list()
     loh.list <- list()
@@ -99,7 +94,7 @@ casper <- function(cnv.dir = 'out/cnv',
     message("Performing HMM segmentation...")
     
     for (i in 1:object@cnv.scale) {
-        cnv.list[[i]] <- PerformSegmentationWithHMM(object, cnv.scale = i, removeCentromere = F, cytoband = cytoband)
+        cnv.list[[i]] <- CaSpER::PerformSegmentationWithHMM(object, cnv.scale = i, removeCentromere = F, cytoband = cytoband)
     }
     
     for (i in 1:3) {
@@ -109,16 +104,16 @@ casper <- function(cnv.dir = 'out/cnv',
         
         object@segments$states2[as.numeric(as.character(object@segments$state)) == 1] <- "del"
         object@segments$states2[as.numeric(as.character(object@segments$state)) == 5] <- "amp"
-        final.objects[[i]] <- generateLargeScaleEvents(object)
+        final.objects[[i]] <- CaSpER::generateLargeScaleEvents(object)
     }
     
     #Large-Scale CNV Summarization.
-    finalChrMat <- extractLargeScaleEvents (final.objects, thr=0.75)
+    finalChrMat <- CaSpER::extractLargeScaleEvents (final.objects, thr=0.75)
     
     #Segment based CNV summarization
     gamma <- 6
     all.segments <- do.call(rbind, lapply(final.objects, function(x) x@segments))
-    segment.summary <- extractSegmentSummary (final.objects)
+    segment.summary <- CaSpER::extractSegmentSummary (final.objects)
     loss <- segment.summary$all.summary.loss
     gain <- segment.summary$all.summary.gain
     loh <- segment.summary$all.summary.loh
@@ -129,15 +124,15 @@ casper <- function(cnv.dir = 'out/cnv',
     #Gene based CNV Summarization
     all.summary<- rbind(loss.final, gain.final)
     colnames(all.summary) [2:4] <- c("Chromosome", "Start",   "End")
-    rna <- GRanges(seqnames = Rle(gsub("q", "", gsub("p", "", all.summary$Chromosome))),
-                   IRanges(all.summary$Start, all.summary$End))   
-    ann.gr <- makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
-    hits <- findOverlaps(rna, ann.gr)
-    genes <- splitByOverlap(ann.gr, rna, "GeneSymbol")
+    rna <- GenomicRanges::GRanges(seqnames = S4Vectors::Rle(gsub("q", "", gsub("p", "", all.summary$Chromosome))),
+                                  IRanges::IRanges(all.summary$Start, all.summary$End))   
+    ann.gr <- GenomicRanges::makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
+    hits <- GenomicRanges::findOverlaps(rna, ann.gr)
+    genes <- CaSpER::splitByOverlap(ann.gr, rna, "GeneSymbol")
     genes.ann <- lapply(genes, function(x) x[!(x=="")])
     all.genes <- unique(final.objects[[1]]@annotation.filt[,2])
     all.samples <- unique(as.character(final.objects[[1]]@segments$ID))
-    rna.matrix <- gene.matrix(seg=all.summary, all.genes=all.genes, all.samples=all.samples, genes.ann=genes.ann)
+    rna.matrix <- CaSpER::gene.matrix(seg=all.summary, all.genes=all.genes, all.samples=all.samples, genes.ann=genes.ann)
     write.table(rna.matrix, file=file.path(cnv.dir, "rna_matrix.tsv"))
     
     # Print message

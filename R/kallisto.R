@@ -27,9 +27,10 @@ index <- function(ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.g
 # kallisto command
 #=====================
 kallisto <- function(trim1 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz',
-                     trim2 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz',
+                     trim2 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R2_val_2.fq.gz',
                      quant.dir = 'out/kallisto',
                      ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.gz',
+                     threads = 12,
                      i = 1) {
     # Create output directory
     if (!file.exists(quant.dir)) {
@@ -47,6 +48,7 @@ kallisto <- function(trim1 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz
                   trim1,
                   ' ',
                   trim2,
+                  ' --threads ', threads,
                   ' 1>',ifelse(i>1,'>',''),
                   file.path('out/logs', 'kallisto.out'),
                   ' 2>',ifelse(i>1,'>',''),
@@ -61,29 +63,38 @@ kallisto <- function(trim1 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz
 
 
 #==========================================
+# TxDb object step
+#==========================================
+ref_txb <- function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
+                    txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
+    
+    # Create TxDb database and save to SQLite for later use
+    gtf = file.path(txdb.dir)
+    txdb.filename = file.path("data/reference_transcriptome/gencode.v43.annotation.sqlite")
+    txdb = GenomicFeatures::makeTxDbFromGFF(gtf)
+    AnnotationDbi::saveDb(txdb, txdb.filename)
+}
+
+
+#==========================================
 # tximport counts step
 #==========================================
 # gtf downloaded from here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz
-tximp_counts = function(gtf.dir = "data/reference_genome/gencode.v33.annotation.gtf",
-                        txdb.dir = "data/gencode.v43.annotation.sqlite",
+tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
                         quant.dir = "out/kallisto",
-                        out.dir = "out/gene_counts"){
-    
-    # Create TxDb database and save to SQLite for later uses
-    txdb = GenomicFeatures::makeTxDbFromGFF(gtf.dir)
-    saveDb(txdb.dir, txdb.filename)
+                        out.dir = "out/gene_counts",
+                        txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
     
     # Load TxDB & create tx2gene
-    txdb = AnnotationDbi::loadDb(txdb.filename)
+    txdb = AnnotationDbi::loadDb(txdb.file)
     k = AnnotationDbi::keys(txdb, keytype = "TXNAME")
     tx2gene = AnnotationDbi::select(txdb, k, "GENEID", "TXNAME")
     #tx2gene$TXNAME = sapply(strsplit(tx2gene$TXNAME,".",fixed = T), `[`, 1)
     
     # Import kallisto data
-    files = file.path(paste0(kal.dir),list.files(test.dir, pattern = "_R1"), "abundance.tsv")
-    names(files) = list.files(kal.dir, pattern = "_R1")
+    files = file.path(paste0(quant.dir),list.files(quant.dir, pattern = "_R1"), "abundance.tsv")
+    names(files) = list.files(quant.dir, pattern = "_R1")
     txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
-    #head(txi_tsv$counts)
     
     # Samples information text file (Contains: Sample name, type(Tumeur/Sain) & sample number)
     sampleTable = read.delim(file.path("data/sampleTable.txt"))
@@ -113,11 +124,20 @@ tximp_counts = function(gtf.dir = "data/reference_genome/gencode.v33.annotation.
 kallisto_rnaseq <- function(idx.dir ='data/index',
                             ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.gz',
                             trim.dir = 'out/fastq.trim',
-                            quant.dir = 'out/kallisto') {
-  
+                            quant.dir = 'out/kallisto',
+                            threads = 12,
+                            txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
+                            txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
+ 
     # Index, if not present yet, but reference is there, otherwise, kaboom!...
     if(file.exists(ref.transcriptome) & !file.exists(gsub('fasta.gz','idx',ref.transcriptome))) {
         index(ref.transcriptome = ref.transcriptome)
+    }
+    
+    # Create TxDb SQL if not present
+    if(!file.exists(txdb.file)) {
+        ref_txb(txdb.dir = txdb.dir,
+                txdb.file = txdb.file)
     }
     
     # Name of sequencing files
@@ -132,6 +152,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
                  trim2 = trim2[i],
                  quant.dir =  file.path(quant.dir, sequencing_files[[5]][i]),
                  ref.transcriptome = ref.transcriptome,
+                 threads = threads,
                  i = i)
         
         # Message
@@ -139,8 +160,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     }
     
     # tximport for all
-    tximp_counts(gtf.dir = gtf.dir,
-                 txdb.dir = txdb.dir,
+    tximp_counts(txdb.dir = txdb.dir,
                  quant.dir = quant.dir,
                  out.dir = out.dir)
     

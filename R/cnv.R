@@ -1,6 +1,11 @@
 #CNV functions
 
-#libraries needed: CaSpER, GenomicRanges & IRanges
+#libraries needed: CaSpER, GenomicRanges, S4Vectors & IRanges
+
+suppressPackageStartupMessages(library(GenomicRanges))
+suppressWarnings(suppressPackageStartupMessages(library(CaSpER)))
+suppressPackageStartupMessages(library(S4Vectors))
+suppressPackageStartupMessages(library(IRanges))
 
 #==================================
 ###Cytoband information
@@ -10,7 +15,7 @@
 cytoband <-  function(cytoband.dir = 'data/cnv/cytoband/cytoBand.txt'){
     
     #Create cytoband information file
-    cytoband = read.delim(file.path(cytoband.dir), header=F)
+    cytoband = read.delim(cytoband.dir, header=F)
     cytoband = data.frame(V1=gsub("chr", "", cytoband[,1]), V2=cytoband[,2], V3=cytoband[,3], V4=substring(cytoband$V4, 1, 1), stringsAsFactors=F)
     start = do.call(rbind, lapply(split(cytoband$V2, paste0(cytoband$V1, cytoband$V4)), min))
     end = do.call(rbind, lapply(split(cytoband$V3, paste0(cytoband$V1, cytoband$V4)), max))
@@ -48,8 +53,8 @@ centromere <-  function(centromere.dir = 'data/cnv/centromere/cytoBand.txt'){
 ###CaSpER step
 #==================================
 casper <- function(cnv.dir = 'out/cnv',
-                   cytoband.dir = 'data/cnv/cytoband/cytoband.txt',
-                   centromere.dir = 'data/cnv/centromere/centromere.txt',
+                   cyto.dir = 'data/cnv/cytoband/cytoband.txt',
+                   centro.dir = 'data/cnv/centromere/centromere.txt',
                    counts.dir = 'out/gene_counts',
                    sample.dir ='out/gene_counts/htseq_counts.tsv'){
     
@@ -59,33 +64,33 @@ casper <- function(cnv.dir = 'out/cnv',
     }
     
     #Import Gene expression counts
-    counts_df = read.csv(file.path(sample.dir), sep = '\t',header = TRUE)
+    counts_df = read.csv(sample.dir, sep = '\t',header = TRUE)
     
     #Modify gene IDs and rownames for rannotation file
     counts_df$GENE_ID = sapply(strsplit(counts_df$GENE_ID,".",fixed = T), `[`, 1)
-    write.table(counts_df, file=file.path(counts.dir, 'transfo_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    write.table(counts_df, file.path(counts.dir, 'transfo_counts.tsv'),row.names =F, quote = F,sep = '\t')
     row_ids = read.delim(file.path(counts.dir,'transfo_counts.tsv'), header = TRUE)
     df = data.matrix(row_ids)
     row.names(df) = row_ids$GENE_ID
     
     #Generate annotation & match to counts dataframe
-    centromere = read.delim(file.path(centromere.dir), header=FALSE)
+    centromere = read.delim(centro.dir, header=FALSE)
     
-    rannotation = CaSpER::generateAnnotation(id_type="ensembl_gene_id", genes=rownames(df),
-                                             ishg19=T, centromere=centromere, host="https://www.ensembl.org/")
+    rannotation = generateAnnotation(id_type="ensembl_gene_id", genes=rownames(df),
+                                     ishg19=T, centromere=centromere, host="https://www.ensembl.org/")
     counts_df = df[match( rannotation$Gene,rownames(df)), ]
 
     #Samples IDs (IMPORTANT!!!colnames(control.sample.ids) == colnames(counts_df))
     control.sample.ids = colnames(counts_df)
     
     #Cytoband file modif
-    cytoband = read.delim(file.path(cytoband.dir), header=TRUE)
+    cytoband = read.delim(cyto.dir, header=TRUE)
     
     #Create CaSpER object
-    object = CaSpER::CreateCasperObject(raw.data=counts_df, loh.name.mapping=NULL, sequencing.type="bulk",
-                                        cnv.scale=3, loh.scale=3, matrix.type="normalized", expr.cutoff=4.5,
-                                        annotation=rannotation, method="iterative", loh=NULL, filter="median", 
-                                        control.sample.ids=control.sample.ids, cytoband=cytoband, genomeVersion="hg38")
+    object = CreateCasperObject(raw.data=counts_df, loh.name.mapping=NULL, sequencing.type="bulk",
+                                cnv.scale=3, loh.scale=3, matrix.type="normalized", expr.cutoff=4.5,
+                                annotation=rannotation, method="iterative", loh=NULL, filter="median", 
+                                control.sample.ids=control.sample.ids, cytoband=cytoband, genomeVersion="hg38")
     #Run CaSpER object
     final.objects <- list()
     loh.list <- list()
@@ -94,7 +99,7 @@ casper <- function(cnv.dir = 'out/cnv',
     message("Performing HMM segmentation...")
     
     for (i in 1:object@cnv.scale) {
-        cnv.list[[i]] <- CaSpER::PerformSegmentationWithHMM(object, cnv.scale = i, removeCentromere = F, cytoband = cytoband)
+        cnv.list[[i]] <- PerformSegmentationWithHMM(object, cnv.scale = i, removeCentromere = F, cytoband = cytoband)
     }
     
     for (i in 1:3) {
@@ -104,16 +109,16 @@ casper <- function(cnv.dir = 'out/cnv',
         
         object@segments$states2[as.numeric(as.character(object@segments$state)) == 1] <- "del"
         object@segments$states2[as.numeric(as.character(object@segments$state)) == 5] <- "amp"
-        final.objects[[i]] <- CaSpER::generateLargeScaleEvents(object)
+        final.objects[[i]] <- generateLargeScaleEvents(object)
     }
     
     #Large-Scale CNV Summarization.
-    finalChrMat <- CaSpER::extractLargeScaleEvents (final.objects, thr=0.75)
+    finalChrMat <- extractLargeScaleEvents (final.objects, thr=0.75)
     
     #Segment based CNV summarization
     gamma <- 6
     all.segments <- do.call(rbind, lapply(final.objects, function(x) x@segments))
-    segment.summary <- CaSpER::extractSegmentSummary (final.objects)
+    segment.summary <- extractSegmentSummary (final.objects)
     loss <- segment.summary$all.summary.loss
     gain <- segment.summary$all.summary.gain
     loh <- segment.summary$all.summary.loh
@@ -124,15 +129,15 @@ casper <- function(cnv.dir = 'out/cnv',
     #Gene based CNV Summarization
     all.summary<- rbind(loss.final, gain.final)
     colnames(all.summary) [2:4] <- c("Chromosome", "Start",   "End")
-    rna <- GenomicRanges::GRanges(seqnames = Rle(gsub("q", "", gsub("p", "", all.summary$Chromosome))),
-                   IRanges::IRanges(all.summary$Start, all.summary$End))   
-    ann.gr <- GenomicRanges::makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
-    hits <- IRanges::findOverlaps(rna, ann.gr)
-    genes <- CaSpER::splitByOverlap(ann.gr, rna, "GeneSymbol")
+    rna <- GRanges(seqnames = Rle(gsub("q", "", gsub("p", "", all.summary$Chromosome))),
+                   IRanges(all.summary$Start, all.summary$End))   
+    ann.gr <- makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
+    hits <- findOverlaps(rna, ann.gr)
+    genes <- splitByOverlap(ann.gr, rna, "GeneSymbol")
     genes.ann <- lapply(genes, function(x) x[!(x=="")])
     all.genes <- unique(final.objects[[1]]@annotation.filt[,2])
     all.samples <- unique(as.character(final.objects[[1]]@segments$ID))
-    rna.matrix <- CaSpER::gene.matrix(seg=all.summary, all.genes=all.genes, all.samples=all.samples, genes.ann=genes.ann)
+    rna.matrix <- gene.matrix(seg=all.summary, all.genes=all.genes, all.samples=all.samples, genes.ann=genes.ann)
     write.table(rna.matrix, file=file.path(cnv.dir, "rna_matrix.tsv"))
     
     # Print message
@@ -143,10 +148,10 @@ casper <- function(cnv.dir = 'out/cnv',
 #======================
 # cleanup 
 #======================
-cleanup = function (counts.dir = 'out/gene_counts/')
+cleanup <-  function(counts.dir = 'out/gene_counts')
 {
     # rm command
-    rm_cmd = paste0('rm ',counts.dir,'*transfo_counts.tsv*')
+    rm_cmd = paste0('rm ',file.path(counts.dir,'*transfo_counts.tsv*'))
     
     system(rm_cmd)
     
@@ -159,36 +164,43 @@ cleanup = function (counts.dir = 'out/gene_counts/')
 #=====================
 #Wrapper: cnv_rnaseq
 #=====================
-cnv_rnaseq <- function(cytoband.dir = 'data/cnv/cytoband/cytoBand.txt',
-                       centromere.dir = 'data/cnv/centromere/cytoBand.txt',
+cnv_rnaseq <- function(cyto.dir = 'data/cnv/cytoband/cytoband.txt',
+                       cytoband.dir = 'data/cnv/cytoband/cytoBand.txt',
+                       centro.dir = 'data/cnv/centromere/centromere.txt',
+                       centromere.dir = 'data/cnv/cytoband/cytoBand.txt',
                        counts.dir = 'out/gene_counts',
-                       cnv.dir = 'out/cnv'){
+                       cnv.dir = 'out/cnv')
+    suppressWarnings(
+    {
     
     #Create cytoband info if not present
-    if (!file.exists(cytoband.dir)){
+    if (!file.exists(cyto.dir)){
         cytoband(cytoband.dir = cytoband.dir)}
     
     #Create centromere info if not present
-    if (!file.exists(centromere.dir)){
+    if (!file.exists(centro.dir)){
         centromere(centromere.dir = centromere.dir)}
     
     #Name of count files
-    list_files <- list.files(file.path('out/gene_counts/'))
+    list_files <- list.files(counts.dir)
     
     for (i in seq_along(list_files)){
         #CaSpER command
         casper(cnv.dir = cnv.dir,
-               cytoband.dir = cytoband.dir,
-               centromere.dir = centromere.dir,
+               cyto.dir = cyto.dir,
+               centro.dir = centro.dir,
                counts.dir = counts.dir,
                sample.dir = file.path(counts.dir,list_files[[1]]))
         
         # Message
-        message(paste0('--- Done sample, ', list_files[i], ' Time is: ', Sys.time(), ' ---'))
+        message(paste0('--- Done sample, ', list_files[[1]], ' Time is: ', Sys.time(), ' ---'))
         
     }
     
     # Print message
     message(paste0('Done cnv, Time is: ', Sys.time(),
                    '\nNote: In result matrix, 0 = alteration, 1 = amplification & -1 = deletion'))
+    # Cleanup
+    cleanup(counts.dir = counts.dir)
 }
+)

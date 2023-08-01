@@ -328,6 +328,3 @@ counts_rnaseq = function(fq.dir = params$fq.dir,
     cleanup(out.dir = out.dir)
     
 }
-
-
-

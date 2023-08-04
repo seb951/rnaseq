@@ -14,9 +14,11 @@ genome_lib <- function(ctat.dir = 'data/ctat',
         dir.create(ctat.dir, recursive = TRUE)
     }
     
-    cmd <- paste0('cd ', ctat.dir,' | wget ', ctat.lib,' | tar -xvf GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play.tar.gz')
+    cmd1 <- paste0('cd ', ctat.dir)
+    cmd2 <- paste0('wget ', ctat.lib)
+    cmd3 <- paste0('tar -xvf GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play.tar.gz')
     
-    system(cmd)
+    system(cmd1);system(cmd2);system(cmd3)
     
     #message(cmd)
     message(paste0('Done creating CTAT Genome library, Time is: ',Sys.time()))
@@ -28,20 +30,21 @@ genome_lib <- function(ctat.dir = 'data/ctat',
 #=====================
 
 fusion <- function(ctat.dir = 'data/ctat/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir',
-                   trim1 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz',
-                   trim2 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R2_val_2.fq.gz',
-                   out.dir = 'out/fusion',
+                   trim1 = sequences()[[3]][1],
+                   trim2 = sequences()[[4]][1],
+                   fus.dir = 'out/fusion',
                    CPU = 10,
                    i=1){
     
     # Create output directory
-    if (!file.exists(out.dir)) {
-        dir.create(out.dir, recursive = TRUE)
+    if (!file.exists(fus.dir)) {
+        dir.create(fus.dir, recursive = TRUE)
     }
     
-    cmd <- paste0('STAR-Fusion --left_fq ', trim1, ' --right_fq ', trim2,
+    cmd <- paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
+                  'STAR-Fusion --left_fq ', trim1, ' --right_fq ', trim2,
                  ' --genome_lib_dir ', ctat.dir,
-                 ' --CPU ', CPU,' --output_dir ', out.dir, 
+                 ' --CPU ', CPU,' --output_dir ', fus.dir, 
                  ' 1> ',ifelse(i>1,'>',''),
                  file.path('out/logs', 'star-fusion.out'),
                  ' 2> ',ifelse(i>1,'>',''),
@@ -59,14 +62,17 @@ fusion <- function(ctat.dir = 'data/ctat/GRCh38_gencode_v37_CTAT_lib_Mar012021.p
 # cleanup 
 #======================
 #review#
-cleanup = function (out.dir = 'out/fusion')
+clean_files = function (fus.dir = 'out/fusion')
 {
+    rm_cmd1 = paste0('rm ',fus.dir,'/*/*Aligned.out.bam*')
+    rm_cmd2 = paste0('rm ',fus.dir,'/*/*.cmds')
+    rm_cmd3 = paste0('rm -r ',fus.dir,'/*/*_starF_checkpoints')
+    rm_cmd4 = paste0('rm -r ',fus.dir,'/*/*tmp_chim_read_mappings_dir')
+    rm_cmd5 = paste0('rm -r ',fus.dir,'/*/*star-fusion.preliminary')
     
-    rm_cmd = paste0('rm -v ! ',out.dir,'star-fusion.fusion_predictions.tsv | ', out.dir, 'star-fusion.fusion_predictions.abridged.tsv')
+    system(rm_cmd1);system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5)
     
-    system(rm_cmd)
-    
-    message(paste0('Done cleanup of temporary (bam) because they are really big, Time is: ',Sys.time()))
+    message(paste0('Done cleanup of output & directory files because they are really big, Time is: ',Sys.time()))
     return('')
 }
 
@@ -75,11 +81,11 @@ cleanup = function (out.dir = 'out/fusion')
 #Wrapper: fusion_rnaseq
 #=====================
 
-fusion_rnaseq <- function(ctat.dir = params$ctat.dir,
-                          ctat.lib = params$ctat.lib,
-                          trim.dir = params$trim.dir,
-                          out.dir = params$out.dir,
-                          CPU = params$CPU){
+fusion_rnaseq <- function(ctat.dir = 'data/ctat',
+                          ctat.lib = 'https://data.broadinstitute.org/Trinity/CTAT_RESOURCE_LIB/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play.tar.gz',
+                          trim.dir = 'out/fastq.trim',
+                          fus.dir = 'out/fusion',
+                          CPU = 10){
     
     #Create CTAT Genome library if not present
     if (!file.exists(ctat.dir)) {
@@ -94,15 +100,19 @@ fusion_rnaseq <- function(ctat.dir = params$ctat.dir,
     
     for (i in seq_along(sequencing_files[[5]])) {
         #STAR-Fusion command
-       fusion(ctat.dir = 'data/ctat/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir',
+       fusion(ctat.dir = file.path(ctat.dir,'GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir'),
               trim1 = trim1[i],
               trim2 = trim2[i],
-              out.dir = file.path('out/fusion', sequencing_files[[5]][i]),
+              fus.dir = file.path(fus.dir, sequencing_files[[5]][i]),
               CPU = CPU,
               i=i)
         
         # Message
         message(paste0('--- Done sample, ', sequencing_files[[5]][i], ' Time is: ', Sys.time(), ' ---'))
         
-        }
+    }
+    
+    #final cleanup
+    clean_files(fus.dir = fus.dir)
+    
 }

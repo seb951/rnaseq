@@ -95,24 +95,12 @@ tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.ann
     files = file.path(paste0(quant.dir),list.files(quant.dir, pattern = "_R1"), "abundance.tsv")
     names(files) = list.files(quant.dir, pattern = "_R1")
     txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
-    
-    # Samples information text file (Contains: Sample name, type(Tumeur/Sain) & sample number)
-    sampleTable = read.delim(file.path("data/sampleTable.txt"))
-    rownames(sampleTable) = sampleTable$Name
-    sampleTable$Type = as.factor(sampleTable$Type)
-    sampleTable$Sample = as.factor(sampleTable$Sample)
-    
-    # Generate kallisto gene counts intto dataframe
-    dds_kal = DESeq2::DESeqDataSetFromTximport(txi_tsv, colData = sampleTable, ~ Type)
-    dds_deseq = DESeq2::DESeq(dds_kal)
-    dds_counts = counts(dds_deseq, normalized = TRUE)
-    dds_counts = round(dds_counts)
-    write.table(dds_counts, file.path(out.dir,'kallisto_counts.tsv'), sep="\t")
-    kal_count = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
-    kal_count = kal_count[- 1, ] 
-    colnames(kal_count) = c('GENE_ID',names(files))
-    write.table(kal_count,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
-    
+    count_df = round(txi_tsv$counts)
+    write.table(count_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =T, quote = F,sep = '\t')
+    counts_df = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
+    colnames(counts_df) = c('GENE_ID', names(files))
+    write.table(counts_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+
     # Print message
     message(paste0('Done tximport, Time is: ', Sys.time()))
 }

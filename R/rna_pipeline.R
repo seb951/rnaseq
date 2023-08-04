@@ -59,6 +59,9 @@ option_list = list(
                  help="txdb SQL directory [default %default]", metavar="character"),
 
     ###fusion specific inputs
+    make_option( "--fusdir",type="character", default='out/fusion', 
+                 help="fusion directory [default %default]", metavar="character"),
+    
     make_option( "--ctatdir",type="character", default='data/ctat', 
                  help="CTAT Genome library directory [default %default]", metavar="character"),  
     
@@ -143,7 +146,7 @@ if (arguments$args == 'fusion') {
     fusion_rnaseq(ctat.dir = arguments$options$ctatdir,
                   ctat.lib = arguments$options$ctatlib,
                   trim.dir = arguments$options$trimdir,
-                  out.dir = arguments$options$outdir,
+                  fus.dir = arguments$options$fusdir,
                   CPU = arguments$options$CPU)
 }
 

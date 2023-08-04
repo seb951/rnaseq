@@ -134,12 +134,6 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
         index(ref.transcriptome = ref.transcriptome)
     }
     
-    # Create TxDb SQL if not present
-    if(!file.exists(txdb.file)) {
-        ref_txb(txdb.dir = txdb.dir,
-                txdb.file = txdb.file)
-    }
-    
     # Name of sequencing files
     sequencing_files <- sequences(trim.dir=trim.dir)
     trim1 <- sequencing_files[[3]]
@@ -157,6 +151,12 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
         
         # Message
         message(paste0('--- Done sample, ', sequencing_files[[5]][i], ' Time is: ', Sys.time(), ' ---'))
+    }
+    
+    # Create TxDb SQL if not present
+    if(!file.exists(txdb.file)) {
+        ref_txb(txdb.dir = txdb.dir,
+                txdb.file = txdb.file)
     }
     
     # tximport for all

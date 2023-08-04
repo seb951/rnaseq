@@ -67,7 +67,7 @@ casper <- function(cnv.dir = 'out/cnv',
     row_ids = read.delim(file.path(counts.dir,'transfo_counts.tsv'), header = TRUE)
     df = data.matrix(row_ids)
     row.names(df) = row_ids$GENE_ID
-    df = df[,2:9]
+    df = df[, -1]
     
     #Generate annotation & match to counts dataframe
     centromere = read.delim(centro.dir, header=FALSE)
@@ -129,7 +129,7 @@ casper <- function(cnv.dir = 'out/cnv',
                                   IRanges::IRanges(all.summary$Start, all.summary$End))   
     ann.gr <- GenomicRanges::makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
     hits <- IRanges::findOverlaps(rna, ann.gr)
-    genes <- CaSpER::splitByOverlap(ann.gr, rna, "GeneSymbol")
+    genes <- splitByOverlap(ann.gr, rna, "GeneSymbol") #library(CaSpER) ??
     genes.ann <- lapply(genes, function(x) x[!(x=="")])
     all.genes <- unique(final.objects[[1]]@annotation.filt[,2])
     all.samples <- unique(as.character(final.objects[[1]]@segments$ID))

@@ -113,29 +113,28 @@ casper <- function(cnv.dir = 'out/cnv',
     write.table(finalChrMat, file.path(cnv.dir, "cnv_sum.tsv"),row.names=TRUE)
     
     #Segment based CNV summarization
-    #gamma <- 1
     all.segments <- do.call(rbind, lapply(final.objects, function(x) x@segments))
     write.table(all.segments, file.path(cnv.dir, "all_segments.tsv"), row.names=FALSE)
-    #gamma <- 1
-    #suppressWarnings(segment.summary <- CaSpER::extractSegmentSummary(final.objects))
-    #loss <- segment.summary$all.summary.loss
-    #gain <- segment.summary$all.summary.gain
-    #loss.final <- loss[loss$count>=gamma, ]
-    #gain.final <- gain[gain$count>=gamma, ]
+    gamma <- 1 #Set gamma parameter for CNV calls
+    suppressWarnings(segment.summary <- CaSpER::extractSegmentSummary(final.objects))
+    loss <- segment.summary$all.summary.loss
+    gain <- segment.summary$all.summary.gain
+    loss.final <- loss[loss$count>=gamma, ]
+    gain.final <- gain[gain$count>=gamma, ]
     
     #Gene based CNV Summarization
-    #all.summary<- rbind(loss.final, gain.final)
-    #colnames(all.summary) [2:4] <- c("Chromosome", "Start",   "End")
-    #rna <- GenomicRanges::GRanges(seqnames = S4Vectors::Rle(gsub("q", "", gsub("p", "", all.summary$Chromosome))),
-    #                              IRanges::IRanges(all.summary$Start, all.summary$End))   
-    #ann.gr <- GenomicRanges::makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
-    #hits <- IRanges::findOverlaps(rna, ann.gr)
-    #genes <- splitByOverlap(ann.gr, rna, "GeneSymbol")
-    #genes.ann <- lapply(genes, function(x) x[!(x=="")])
-    #all.genes <- unique(final.objects[[1]]@annotation.filt[,2])
-    #all.samples <- unique(as.character(final.objects[[1]]@segments$ID))
-    #rna.matrix <- CaSpER::gene.matrix(seg=all.summary, all.genes=all.genes, all.samples=all.samples, genes.ann=genes.ann)
-    #write.table(rna.matrix, file=file.path(cnv.dir, "rna_matrix.tsv"))
+    all.summary<- rbind(loss.final, gain.final)
+    colnames(all.summary) [2:4] <- c("Chromosome", "Start",   "End")
+    rna <- GenomicRanges::GRanges(seqnames = S4Vectors::Rle(gsub("q", "", gsub("p", "", all.summary$Chromosome))),
+                                  IRanges::IRanges(all.summary$Start, all.summary$End))   
+    ann.gr <- GenomicRanges::makeGRangesFromDataFrame(final.objects[[1]]@annotation.filt, keep.extra.columns = TRUE, seqnames.field="Chr")
+    hits <- IRanges::findOverlaps(rna, ann.gr)
+    genes <- CaSpER::splitByOverlap(ann.gr, rna, "GeneSymbol")
+    genes.ann <- lapply(genes, function(x) x[!(x=="")])
+    all.genes <- unique(final.objects[[1]]@annotation.filt[,2])
+    all.samples <- unique(as.character(final.objects[[1]]@segments$ID))
+    rna.matrix <- CaSpER::gene.matrix(seg=all.summary, all.genes=all.genes, all.samples=all.samples, genes.ann=genes.ann)
+    write.table(rna.matrix, file=file.path(cnv.dir, "rna_matrix.tsv"))
     
     # Print message
     message(paste0('Done CaSpER, Time is: ', Sys.time()))

@@ -96,10 +96,14 @@ tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.ann
     names(files) = list.files(quant.dir, pattern = "_R1")
     txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
     count_df = round(txi_tsv$counts)
-    write.table(count_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =T, quote = F,sep = '\t')
-    counts_df = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
-    colnames(counts_df) = c('GENE_ID', names(files))
-    write.table(counts_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    write.table(count_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =T, quote = F, sep = '\t')
+    df_count = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
+    colnames(df_count) = c('GENE_ID', names(files))
+    write.table(df_count,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    df_c = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = T)
+    df_c[-1,]
+    write.table(df_c[-1,],file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    
 
     # Print message
     message(paste0('Done tximport, Time is: ', Sys.time()))

@@ -1,0 +1,88 @@
+---
+title: "Kallisto report"
+author: "Émilie Barrette"
+date: "`r Sys.Date()`"
+output: html_document
+df_print: paged
+---
+
+# Introduction
+
+This is a comparative analysis for `kallisto` VS `STAR` gene level counts.
+
+The counts were generated from this [RNAseq script](https://github.com/Yohan-Bosse-Lab/rnaseq) with [kallisto](https://pachterlab.github.io/kallisto) and [STAR](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) tools.
+
+# kallisto vs STAR execution time
+
+| **Steps** | **kallisto**    | **STAR**      |
+|:---------|:---------------|:-------------|
+| Index     | \~10 min        | \~45 min      |
+| Alignment | \~40 min/sample | \~3-4h/sample |
+
+# List of samples
+
+| **Name**                          | **Type** | **Sample** |
+|:---------------------------------|:-------------------|-------------------:|
+| NS.2108.003.UDP0200_i7---UDP0200_i5.RNA_0005_5598_Sain_R1   | Sain     | 5598       |
+| NS.2108.003.UDP0201_i7---UDP0201_i5.RNA_0006_5598_Tumeur_R1 | Tumeur   | 5598       |
+| NS.2108.003.UDP0202_i7---UDP0202_i5.RNA_0009_5268_Sain_R1   | Sain     | 5268       |
+| NS.2108.003.UDP0203_i7---UDP0203_i5.RNA_0010_5268_Tumeur_R1 | Tumeur   | 5268       |
+| NS.2108.003.UDP0204_i7---UDP0204_i5.RNA_0011_5402_Sain_R1   | Sain     | 5402       |
+| NS.2108.003.UDP0205_i7---UDP0205_i5.RNA_0012_5402_Tumeur_R1 | Tumeur   | 5402       |
+| NS.2108.003.UDP0206_i7---UDP0206_i5.RNA_0017_5487_Sain_R1   | Sain     | 5487       |
+| NS.2108.003.UDP0207_i7---UDP0207_i5.RNA_0018_5487_Tumeur_R1 | Tumeur   | 5487       |
+
+# Read counts `kallisto` VS `STAR`
+
+```{r sample_table, echo=FALSE, warning=FALSE}
+
+df = read.csv("kal_vs_star_counts.tsv")
+df_col = df[, 2:18]
+DT::datatable(df_col, caption = htmltools::tags$caption(htmltools::strong("Read counts for each sample (gene_level)"), style="color:blue"))
+
+```
+
+# Comparative analysis graphs
+
+```{r counts_ggplot, echo=FALSE}
+
+library(ggplot2)
+
+#reorganise columns
+df = read.csv("kal_vs_star_counts.tsv", sep = ',')
+df = df[, -1] 
+
+#correlation kallisto vs STAR
+correlation = sapply(seq(2, ncol(df), by = 2), function(i) {
+  cor(df[[i]], df[[i + 1]])})
+
+#Correlation plot (raw counts)
+sample_names = colnames(df)[seq(2, ncol(df), by = 2)]
+sample_names = gsub("KAL_", " ", sample_names)
+correlation_data <- data.frame(sample_names, correlation)
+
+counts_plot = ggplot(correlation_data, aes(x = sample_names, y = correlation)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Samples", y = "Correlation", title = "Kallisto vs STAR: Raw Counts per Sample Correlation") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6)) 
+
+counts_plot
+
+```
+
+```{r rlog_ggplot, echo=FALSE}
+
+#Correlation plot (rlog)
+rlog_data <- log2(df[, -1] + 1)
+
+correlations <- sapply(seq(1, ncol(rlog_data), by = 2), function(i) {
+  cor(rlog_data[[i]], rlog_data[[i + 1]])})
+
+log_plot = ggplot(correlation_data, aes(x = sample_names, y = correlations)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Samples", y = "Correlation", title = "Kallisto vs STAR: Regularized log Counts per Sample Correlation ") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1,  size = 6))
+
+log_plot
+
+```

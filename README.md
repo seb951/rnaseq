@@ -1,6 +1,6 @@
 # Overview
  * This is a general purpose repository for rnaseq analyses tools/pipelines
- * It contains a script to do either **QC** or **counts**.
+ * It contains a script to do either **QC** or **counts**, **kallisto**, **cnv**, **fusion**
    * **QC** uses `fastqc` processes raw *fastq.gz* files and produces a .html general reports and associated QC files for each sample.
    * **counts** processes raw *.fastq.gz* files and produces a .tsv file of count data.
  * It also contains a pipeline to go from raw *.fastq.gz* files to count data as described below.

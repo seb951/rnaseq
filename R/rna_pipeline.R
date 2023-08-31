@@ -165,13 +165,12 @@ if (arguments$args == 'cnv') {
 
 #running test alignments
 if (arguments$args == 'mini') {
-    counts_test_rnaseq(fq.dir = arguments$options$fqdir,
+    counts_mini_rnaseq(fq.dir = arguments$options$fqdir,
                     trim.dir= arguments$options$trimdir,
                     genomedir = arguments$options$genomeindexdir,
                     annotation.gtf = arguments$options$annotationgtf,
                     genomefasta = arguments$options$genomefasta,
                     out.dir = arguments$options$outdir,
-                    cutadapt=arguments$options$cutadapt,
                     threads= arguments$options$threads,
                     nbfiles= arguments$options$nbfiles,
                     mini.dir = paste0(arguments$options$outdir,'mini'),

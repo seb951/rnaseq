@@ -144,13 +144,12 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
 #======================
 # wrapper : counts_rnaseq
 #======================
-counts_test_rnaseq = function(fq.dir = params$fq.dir,
+counts_mini_rnaseq = function(fq.dir = params$fq.dir,
                          trim.dir= params$trim.dir,
                          genomedir = params$genomedir,
                          annotation.gtf = params$annotation.gtf,
                          genomefasta = params$genomefasta,
                          out.dir = params$out.dir,
-                         cutadapt = params$cutadapt,
                          threads = params$threads,
                          nbfiles = params$nbfiles,
                          head = params$head){

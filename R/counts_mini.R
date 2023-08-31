@@ -117,8 +117,7 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
                          out.dir = params$out.dir,
                          threads = params$threads,
                          nbfiles = params$nbfiles,
-                         head = params$head,
-                         mini.dir = params$mini.dir){
+                         head = params$head){
     
     dir.create(out.dir,showWarnings =F)
     dir.create(file.path(out.dir,'logs'),showWarnings =F)

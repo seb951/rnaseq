@@ -98,7 +98,7 @@ fastqc_wrapper = function(fq.dir = 'path',
         metadata = suppressMessages(read_xlsx(metadata.dir))
         rin = metadata %>% select(c(Nom...1,RIN))
         colnames(rin)[1] = 'bio_sample'
-        qc_stats =  merge(qc_stats,rin)
+        qc_stats =  merge(qc_stats,rin,all.x=T)
     }
     
     qc_stats$type = ifelse(regexpr('umeur',qc_stats$sample)>0,'Tumeur','Sain')

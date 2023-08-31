@@ -97,7 +97,7 @@ option_list = list(
 parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
 arguments <- parse_args(parser,positional_arguments = 1)
 
-if(arguments$args == 'QC' | arguments$args == 'counts' | arguments$args == 'kallisto' | arguments$args == 'fusion' | arguments$args == 'cnv') {
+if(arguments$args == 'QC' | arguments$args == 'counts' | arguments$args == 'kallisto' | arguments$args == 'mini' | arguments$args == 'fusion' | arguments$args == 'cnv') {
     sprintf("Running command ( %s )", arguments$args)
 } else {
     stop(sprintf("Specified command ( %s ) does not exist", arguments$args))
@@ -173,6 +173,6 @@ if (arguments$args == 'mini') {
                     out.dir = arguments$options$outdir,
                     threads= arguments$options$threads,
                     nbfiles= arguments$options$nbfiles,
-                    mini.dir = paste0(arguments$options$outdir,'mini'),
+                    mini.dir = paste0(arguments$options$outdir,'/mini'),
                     head = 4000000)    
 }

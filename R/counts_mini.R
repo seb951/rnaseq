@@ -16,8 +16,8 @@ sequences = function(fq.dir='data/fastq',
     R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
     R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
     
-    R1_mini = paste0(file.path(trim.dir,sample_names),'_R1_mini.fq')
-    R2_mini = paste0(file.path(trim.dir,sample_names),'_R2_mini.fq')
+    R1_mini = paste0(file.path(mini.dir,sample_names),'_R1_mini.fq')
+    R2_mini = paste0(file.path(mini.dir,sample_names),'_R2_mini.fq')
     
     if(length(list.files(trim.dir)>0)) {
     message('It appears that your trimdir is not empty, I will list what is in there in output[[2]],[[3]] & [[4]]')
@@ -152,7 +152,8 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
                          out.dir = params$out.dir,
                          threads = params$threads,
                          nbfiles = params$nbfiles,
-                         head = params$head){
+                         head = params$head,
+                         mini.dir = params$mini.dir){
     
     dir.create(out.dir,showWarnings =F)
     dir.create(file.path(out.dir,'logs'),showWarnings =F)
@@ -161,7 +162,8 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
     #fastq files
     fastq_files = sequences(fq.dir = fq.dir,
                             trim.dir = trim.dir,
-                            out.dir = out.dir)
+                            out.dir = out.dir,
+                            mini.dir = mini.dir)
     
     
     #files to process depends on nbfiles parameter
@@ -178,10 +180,10 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
         out_prefix = file.path(out.dir,'alignments',paste0(fastq_files[[5]][i],'_'))
 
         #mini sample (1%)
-        minisample(r1 = sequences()[[1]][i],
-                      r2 = sequences()[[2]][i],
-                      r1_mini = sequences()[[6]][i],
-                      r2_mini = sequences()[[7]][i],
+        minisample(r1 = fastq_files[[1]][i],
+                      r2 = fastq_files[[2]][i],
+                      r1_mini = fastq_files[[6]][i],
+                      r2_mini = fastq_files[[7]][i],
                       head = head)
         
         #mapping

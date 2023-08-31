@@ -31,7 +31,7 @@ sequences = function(fq.dir='data/fastq',
     #if(out.dir.length>1) warning(paste0(out.dir,' already contains ',out.dir.length,' files. I will add files to this directory'),immediate. = TRUE)
     message(paste0('Done listing sequences, ',length(sample_names),' files to process, Time is: ',Sys.time()))
     
-    return(list(R1,R2,R1_trim,R2_trim,sample_names))
+    return(list(R1,R2,R1_trim,R2_trim,sample_names,R1_mini,R2_mini))
 }
 
 #=====================

@@ -1,5 +1,6 @@
 suppressWarnings(library(optparse))
 source('R/counts_functions.R')
+source('R/counts_mini.R')
 source('R/kallisto.R')
 source('R/fusion.R')
 source('R/cnv.R')
@@ -173,5 +174,6 @@ if (arguments$args == 'mini') {
                     cutadapt=arguments$options$cutadapt,
                     threads= arguments$options$threads,
                     nbfiles= arguments$options$nbfiles,
-                    mini.dir = paste0(arguments$options$outdir,'mini'))    
+                    mini.dir = paste0(arguments$options$outdir,'mini'),
+                    head = 4000000)    
 }

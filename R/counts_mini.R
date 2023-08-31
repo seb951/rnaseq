@@ -1,40 +1,5 @@
 
 
-#=====================
-###get sequences ready
-#=====================
-sequences = function(fq.dir='data/fastq',
-                     trim.dir='out/fastq.trim',
-                     mini.dir='out/fastq.mini',
-                     out.dir = 'out/') {
-    R12 = list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),fq.dir),pattern = 'R[12].fastq.gz$')
-    sample_names = unique(gsub('_R[12].fastq.gz','',R12))
-    
-    R1 = paste0(file.path(fq.dir,sample_names),'_R1.fastq.gz')
-    R2 = paste0(file.path(fq.dir,sample_names),'_R2.fastq.gz')
-    
-    R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
-    R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
-    
-    R1_mini = paste0(file.path(mini.dir,sample_names),'_R1_mini.fq')
-    R2_mini = paste0(file.path(mini.dir,sample_names),'_R2_mini.fq')
-    
-    if(length(list.files(trim.dir)>0)) {
-    message('It appears that your trimdir is not empty, I will list what is in there in output[[2]],[[3]] & [[4]]')
-    R1_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R1_val_1.fq.gz$'))
-    R2_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R2_val_2.fq.gz$'))
-    sample_names = unique(gsub('_R1_val_1.fq.gz','',list.files(trim.dir,pattern = '_R1_val_1.fq.gz$')))
-    }
-    
-    out.dir.length = length(list.files(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out.dir))) 
-    
-    if(length(R12)==0) warning('It appears like your directory contains no .fastq.gz file',immediate. = TRUE)
-    #if(out.dir.length>1) warning(paste0(out.dir,' already contains ',out.dir.length,' files. I will add files to this directory'),immediate. = TRUE)
-    message(paste0('Done listing sequences, ',length(sample_names),' files to process, Time is: ',Sys.time()))
-    
-    return(list(R1,R2,R1_trim,R2_trim,sample_names,R1_mini,R2_mini))
-}
-
 
 #=====================
 ###zcat, random (1%)
@@ -64,7 +29,7 @@ minisample = function(r1 = sequences()[[1]][1],
 #=====================
 #Mapping step
 #=====================
-mapping = function(genomedir = 'data/reference_genome/chr1_index/',
+mapping_mini = function(genomedir = 'data/reference_genome/chr1_index/',
                    genomefasta = 'data/reference_genome/chr1.fa',
                    threads = 12,
                    R1_trim = sequences()[[3]][1],
@@ -103,7 +68,7 @@ mapping = function(genomedir = 'data/reference_genome/chr1_index/',
 #======================
 # cleanup 
 #======================
-cleanup = function (out.dir = 'out/alignments')
+cleanup2 = function (out.dir = 'out/alignments')
 {
 
     rm_cmd1 = paste0('rm ',out.dir,'/alignments/*Aligned.sortedByCoord.out.bam*')
@@ -158,12 +123,12 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
     dir.create(out.dir,showWarnings =F)
     dir.create(file.path(out.dir,'logs'),showWarnings =F)
     dir.create(file.path(out.dir,'alignments'),showWarnings =F)
+    dir.create(file.path(out.dir,'mini'),showWarnings =F)
     
     #fastq files
     fastq_files = sequences(fq.dir = fq.dir,
                             trim.dir = trim.dir,
-                            out.dir = out.dir,
-                            mini.dir = mini.dir)
+                            out.dir = out.dir)
     
     
     #files to process depends on nbfiles parameter
@@ -187,7 +152,7 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
                       head = head)
         
         #mapping
-        mapping(genomedir = genomedir,
+        mapping_mini(genomedir = genomedir,
                 genomefasta = genomefasta,
                 threads = threads,
                 R1_trim = fastq_files[[6]][i],
@@ -207,6 +172,6 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
   
     
     #final cleanup
-    cleanup(out.dir = out.dir)
+    cleanup2(out.dir = out.dir)
     
 }

@@ -15,6 +15,9 @@ sequences = function(fq.dir='data/fastq',
     R1_trim = paste0(file.path(trim.dir,sample_names),'_R1_val_1.fq.gz')
     R2_trim = paste0(file.path(trim.dir,sample_names),'_R2_val_2.fq.gz')
     
+    R1_mini = paste0(file.path(mini.dir,sample_names),'_R1_mini.fq')
+    R2_mini = paste0(file.path(mini.dir,sample_names),'_R2_mini.fq')
+    
     if(length(list.files(trim.dir)>0)) {
     message('It appears that your trimdir is not empty, I will list what is in there in output[[2]],[[3]] & [[4]]')
     R1_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R1_val_1.fq.gz$'))

@@ -9,6 +9,7 @@ params:
   fq.dir: 'data/fastq'
   qc.dir: 'fastqc_results'
   threads: 12
+  plots_arg: FALSE
   fastqc.path: 'fastqc' 
   metadata: 'data/librairies_1_a_70_et_RIN.xlsx'
   adapters.dir: NULL
@@ -58,7 +59,7 @@ print(params)
 
 # Running FastQC functions
 ```{r, tables,message = T, eval = T, echo = T, timehook = T}
-fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
+fastqc_statistics = fastqc_wrapper(fq.dir = params$fq.dir,
                 qc.dir = params$qc.dir,
                 threads = params$threads,
                 fastqc.path =params$fastqc.path,
@@ -85,6 +86,7 @@ fastqc_statistics= fastqc_wrapper(fq.dir = params$fq.dir,
 # Summary Plots 
 ```{r, summary,echo =F,fig.show="hold",out.width="50%"}
 fastqc_statistics[[1]]$type = ifelse(fastqc_statistics[[1]]$type=='Sain','Normal','Tumor')
+
 rin_phred = ggplot(fastqc_statistics[[1]], aes(x=mean_quality, y=RIN,col = type)) + 
     geom_point()+
     xlab("Mean quality per sample (Phred Score)") +
@@ -107,13 +109,19 @@ hist_reads
 
 hist_phred
 
+if(params$plots_arg ==T){
 ggplotly(rin_nbreads)
 
 ggplotly(rin_phred)
+}
+
 
 pdf(file.path(params$qc.dir,'qc_plots.pdf'),width = 9,height = 7)
-hist_reads + hist_phred + rin_nbreads +  rin_phred 
-dev.off()
+hist_reads + hist_phred
+
+
+write.table(fastqc_statistics[[1]],file.path(params$qc.dir,'fastqc_statistics.csv'))
+
 
 
 ```
@@ -124,6 +132,8 @@ dev.off()
 ```{r, plots,timehook =T,fig.width = 11, echo=F}
 # Plot per sequence GC content
 qc_read_collection = fastqc_statistics[[3]]
+if(params$plots_arg ==T){
+
 ggplotly(qc_plot_collection(qc_read_collection, "Per sequence GC content"))
 
 # Per base sequence quality
@@ -157,5 +167,5 @@ adapter_plot = adapter_data %>%
     ylim(0, 100) + ylab('percentage') + ggtitle('adapter (all) content')
 
 ggplotly(adapter_plot)
-
+}
 ```

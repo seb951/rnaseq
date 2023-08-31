@@ -39,7 +39,8 @@ fastqc_wrapper = function(fq.dir = 'path',
                           threads = 8,
                           fastqc.path = 'path',
                           metadata.dir = NULL,
-                          adapters.dir = NULL){
+                          adapters.dir = NULL,
+                          zip = FALSE){
     
     if(length(list.files(qc.dir))==0) {
         if(Sys.info()['sysname'] != 'Windows') {
@@ -56,7 +57,7 @@ fastqc_wrapper = function(fq.dir = 'path',
     
     #zip the whole thing
     zip_cmd = paste0('zip -j ',file.path(qc.dir,"../fastqc_individual_reports.zip "),file.path(qc.dir,"*fastqc.zip"))
-    if(file.exists(file.path(qc.dir,"../fastqc_individual_reports.zip"))==F) system(zip_cmd)
+    if((file.exists(file.path(qc.dir,"../fastqc_individual_reports.zip"))==F) & (zip==T)) system(zip_cmd)
     
     message(paste0(Sys.time(),
                    ' --- Zip archive is stored here: ',
@@ -74,8 +75,10 @@ fastqc_wrapper = function(fq.dir = 'path',
     qc_stats$bio_sample = gsub('_R[12]','',qc_stats$sample)
     
     #fix (shorten) names
-    if(length(grep('i5.',qc_stats$bio_sample[1]))==1) {
-        qc_stats$bio_sample = sapply(strsplit(qc_stats$bio_sample,split ='i5.',fixed = T),"[[", 2)
+    for(i in 1:nrow(qc_stats)){
+      if(length(grep('i5.',qc_stats$bio_sample[i]))==1) {
+        qc_stats$bio_sample[i] = strsplit(qc_stats$bio_sample,split ='i5.',fixed = T)[[1]][2]
+      }
     }
     
     #qc_read_collection

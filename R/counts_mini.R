@@ -34,11 +34,11 @@ minisample = function(r1 = sequences()[[1]][1],
     cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r1,' | head -',format(head, scientific = FALSE),' >reads_',uniqueID,'_r1.fq') #10million reads (roughly 10%)
     cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r2,' | head -',format(head, scientific = FALSE),' >reads_',uniqueID,'_r2.fq') 
     cmd3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'generateFastqSample.py 10 reads_',uniqueID,'_r1.fq reads_',uniqueID,'_r2.fq 3>',r1_mini, ' 4>',r2_mini) # 10 % of 10million (roughly 1% of the data)
-
+    cmd4 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'rm reads_',uniqueID,'*')
     system(cmd1)
     system(cmd2)
     system(cmd3)
-    
+    system(cmd4)
     message(paste0('Done preparing mini sample (',head/40,' PE reads), Time is: ',Sys.time()))
     
     return('')

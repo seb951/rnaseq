@@ -22,21 +22,22 @@ minisample = function(r1 = sequences()[[1]][1],
                       r2_mini = sequences()[[7]][1],
                       head = 40000000){
 
-    check_req = system(paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'which generateFastqSample.py'))
-  
-    if(check_req ==1){    
+    check_req = system(paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'which generateFastqSample.py >temp.log'))
+    system(paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ','rm temp.log')))
+
+        if(check_req ==1){    
     stop('make sure you have this installed (https://github.com/rieseberglab/fastq-examples) in a place your system can find it')
     }
   
-    cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r1,' | head -',head,' >10millions_r1.fq') #10million reads (roughly 10%)
-    cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r2,' | head -',head,' >10millions_r2.fq') 
+    cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r1,' | head -',format(head, scientific = FALSE),' >10millions_r1.fq') #10million reads (roughly 10%)
+    cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r2,' | head -',format(head, scientific = FALSE),' >10millions_r2.fq') 
     cmd3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'generateFastqSample.py 10 10millions_r1.fq 10millions_r2.fq 3>',r1_mini, ' 4>',r2_mini) # 10 % of 10million (roughly 1% of the data)
 
     system(cmd1)
     system(cmd2)
     system(cmd3)
     
-    message(paste0('Done preparing mini sample (',head/40,' million PE reads), Time is: ',Sys.time()))
+    message(paste0('Done preparing mini sample (',head/40,'PE reads), Time is: ',Sys.time()))
     
     return('')
 }

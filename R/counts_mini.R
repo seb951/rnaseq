@@ -1,5 +1,17 @@
 
 
+funny = function(a=1,b=2){
+  
+  if(a ==1){
+    stop('oh oh')
+  }
+  
+
+    print(b)
+    return('super top')
+  
+}
+
 
 #=====================
 ###zcat, random (1%)
@@ -10,18 +22,21 @@ minisample = function(r1 = sequences()[[1]][1],
                       r2_mini = sequences()[[7]][1],
                       head = 40000000){
 
-  print('make sure you have this installed (https://github.com/rieseberglab/fastq-examples) in a place your system can find it')
+    check_req = system(paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'which generateFastqSample.py'))
   
+    if(check_req ==1){    
+    stop('make sure you have this installed (https://github.com/rieseberglab/fastq-examples) in a place your system can find it')
+    }
   
-    cmd1 = paste0('zcat ', r1,' | head -40000000 >10millions_r1.fq') #10million reads (roughly 10%)
-    cmd2 = paste0('zcat ', r2,' | head -40000000 >10millions_r2.fq') 
-    cmd3 = paste0('generateFastqSample.py 10 10millions_r1.fq 10millions_r2.fq 3>',r1_mini, ' 4>',r2_mini) # 10 % of 10million (roughly 1% of the data)
+    cmd1 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r1,' | head -',head,' >10millions_r1.fq') #10million reads (roughly 10%)
+    cmd2 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'zcat ', r2,' | head -',head,' >10millions_r2.fq') 
+    cmd3 = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),'generateFastqSample.py 10 10millions_r1.fq 10millions_r2.fq 3>',r1_mini, ' 4>',r2_mini) # 10 % of 10million (roughly 1% of the data)
 
     system(cmd1)
     system(cmd2)
     system(cmd3)
     
-    message(paste0('Done mini sample (4 million PE reads), Time is: ',Sys.time()))
+    message(paste0('Done preparing mini sample (',head/40,' million PE reads), Time is: ',Sys.time()))
     
     return('')
 }
@@ -88,16 +103,15 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
     for(i in seq_along(samples)){
       expression_temp = read.delim(paste0(out.dir,'/alignments/',samples[i],'_ReadsPerGene.out.tab'), header = F)
       if(i==1) {
-        expression_df = as.data.frame(matrix(0,nrow =nrow(expression_temp), ncol = length(fastq[[5]])+1));
+        expression_df = as.data.frame(matrix(0,nrow =nrow(expression_temp), ncol = length(samples)+1));
         colnames(expression_df)[1] = 'gene_names';
-        colnames(expression_df)[-1] = fastq[[5]];
+        colnames(expression_df)[-1] = samples;
         expression_df[,1]  =expression_temp[,1]
         }
       expression_df[,i+1] = expression_temp[,4]
         
     }
   
-    
     write.csv(expression_df,file.path(out.dir,'expression_df.csv'),row.names =F)
     
     message(paste0('Done meerging all STAR gene tabs, Time is: ',Sys.time()))

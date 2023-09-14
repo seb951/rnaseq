@@ -173,5 +173,5 @@ if (arguments$args == 'mini') {
                     out.dir = arguments$options$outdir,
                     threads= arguments$options$threads,
                     nbfiles= arguments$options$nbfiles,
-                    head = 4000000)    
+                    head = 8000000)    
 }

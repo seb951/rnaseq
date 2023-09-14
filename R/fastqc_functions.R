@@ -78,7 +78,7 @@ fastqc_wrapper = function(fq.dir = 'path',
     #fix (shorten) names
     for(i in 1:nrow(qc_stats)){
       if(length(grep('i5.',qc_stats$bio_sample[i]))==1) {
-        qc_stats$bio_sample[i] = strsplit(qc_stats$bio_sample,split ='i5.',fixed = T)[[1]][2]
+        qc_stats$bio_sample[i] = strsplit(qc_stats$bio_sample[i],split ='i5.',fixed = T)[[1]][2]
       }
     }
     
@@ -98,6 +98,7 @@ fastqc_wrapper = function(fq.dir = 'path',
     if(!is.null(metadata.dir) & file.exists(metadata.dir)){
         metadata = suppressMessages(read_xlsx(metadata.dir,na = "N/A"))
         rin = metadata %>% select(c(Nom,RIN))
+        rin = unique(rin)
         colnames(rin)[1] = 'bio_sample'
         qc_stats =  merge(qc_stats,rin,all.x=T)
     }

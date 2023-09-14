@@ -42,6 +42,7 @@ fastqc_wrapper = function(fq.dir = 'path',
                           adapters.dir = NULL,
                           zip = FALSE){
     
+  #run only if the qc directory is empty.
     if(length(list.files(qc.dir))==0) {
         if(Sys.info()['sysname'] != 'Windows') {
             fastqc2(qc.dir = qc.dir ,fq.dir = fq.dir,threads = threads,fastqc.path = fastqc.path, adapters.dir = adapters.dir)}
@@ -95,8 +96,8 @@ fastqc_wrapper = function(fq.dir = 'path',
     
     # metadata
     if(!is.null(metadata.dir) & file.exists(metadata.dir)){
-        metadata = suppressMessages(read_xlsx(metadata.dir))
-        rin = metadata %>% select(c(Nom...1,RIN))
+        metadata = suppressMessages(read_xlsx(metadata.dir,na = "N/A"))
+        rin = metadata %>% select(c(Nom,RIN))
         colnames(rin)[1] = 'bio_sample'
         qc_stats =  merge(qc_stats,rin,all.x=T)
     }

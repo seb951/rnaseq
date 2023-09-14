@@ -117,7 +117,7 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
   
     write.csv(expression_df,file.path(out.dir,'expression_df.csv'),row.names =F)
     
-    message(paste0('Done meerging all STAR gene tabs, Time is: ',Sys.time()))
+    message(paste0('Done merging all STAR gene tabs, Time is: ',Sys.time()))
     return('')
 }
 

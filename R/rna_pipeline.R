@@ -40,7 +40,7 @@ option_list = list(
     make_option( "--qcdir",type="character", default='fastqc_results', 
                  help="QC argument: output directory [default %default]", metavar="character"),
     
-    make_option( "--metadata",type="character", default='data/librairies_1_a_70_et_RIN.xlsx', 
+    make_option( "--metadata",type="character", default='data/Sommaire_1128_éch_ARN_RIN_FASTQ_31août2023.xlsx', 
                  help="QC argument: output directory [default %default]", metavar="character"),
     
     make_option( "--fastqc",type="character", default='fastqc', 

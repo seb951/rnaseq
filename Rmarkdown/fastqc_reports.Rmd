@@ -22,21 +22,6 @@ params:
 
  
 ```{r, timehook,echo=F}
-knitr::knit_hooks$set(timehook = local({
-  now <- NULL
-  function(before, options) {
-    if (before) {
-      # record the current time before each chunk
-      now <<- Sys.time()
-    } else {
-      # calculate the time difference after a chunk
-      res <- difftime(Sys.time(), now)
-      # return a character string to show the time
-      paste("\n\n\nTime for this code chunk to run:",signif(res,3),attr(res,'units'))
-    }
-  }
-}))
-
 knitr::opts_knit$set(root.dir = '..')
 ``` 
 
@@ -70,7 +55,6 @@ fastqc_statistics = fastqc_wrapper(fq.dir = params$fq.dir,
 # Summary table
   * Listing statistics for each .fastq file
 ```{r, summary_tables,echo = F}
-  
   #datatable 
   datatable(fastqc_statistics[[1]],caption = htmltools::tags$caption(htmltools::strong("Summary statistics"), style="color:darkred"))
 ``` 
@@ -121,9 +105,6 @@ hist_reads + hist_phred
 
 
 write.table(fastqc_statistics[[1]],file.path(params$qc.dir,'fastqc_statistics.csv'))
-
-
-
 ```
 
 

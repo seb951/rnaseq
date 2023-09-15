@@ -51,7 +51,7 @@ trimming = function(trim.dir = 'out/fastq.trim',
     
     
     cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
-                 'trim_galore --cores 4 -q 20 -o ',
+                 'trim_galore --cores 8 -q 20 -o ',
                  trim.dir,
                  ' --phred33 --adapter=',adaptor1,' --adapter2=',adaptor2,' --paired ',
                  R1,
@@ -232,6 +232,21 @@ htseq_count = function (
 
 
 #======================
+# flagstats
+#======================
+flagstats = function (
+    out_prefix =  paste0('rnaseq/out/',sequences()[[5]][1],'_'),
+    out.dir = out.dir)
+{
+  cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools flagstats ",out_prefix,'Aligned.sortedByCoord.out.bam >',file.path(out.dir,'flagstats/'),out_prefix,'.flagstats')
+  
+  message(paste0('Done samtools flagstats, Time is: ',Sys.time()))
+  return('')
+}
+
+
+
+#======================
 # cleanup 
 #======================
 cleanup = function (out.dir = 'out/alignments')
@@ -245,7 +260,7 @@ cleanup = function (out.dir = 'out/alignments')
     rm_cmd6 = paste0('rm -r ',out.dir,'/alignments/*__STARgenome')
     #rm_cmd7 = paste0('rm ',out.dir,'/alignments/*ReadsPerGene.out.tab')
 
-    system(rm_cmd1);system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5);system(rm_cmd6)
+    system(rm_cmd2);system(rm_cmd3);system(rm_cmd4);system(rm_cmd5);system(rm_cmd6)
 
     message(paste0('Done cleanup of temporary (bam) because they are really big, Time is: ',Sys.time()))
     return('')
@@ -268,6 +283,7 @@ counts_rnaseq = function(fq.dir = params$fq.dir,
     dir.create(out.dir,showWarnings =F)
     dir.create(file.path(out.dir,'logs'),showWarnings =F)
     dir.create(file.path(out.dir,'alignments'),showWarnings =F)
+    dir.create(file.path(out.dir,'flagstats'),showWarnings =F)
     
     #fastq files
     fastq_files = sequences(fq.dir = fq.dir,
@@ -316,6 +332,9 @@ counts_rnaseq = function(fq.dir = params$fq.dir,
         
         #sortbam
         sort_bam_by_name(out_prefix = out_prefix)
+        
+        flagstats(out_prefix = out_prefix,
+                  out.dir= out.dir)
         
         #message
         message(paste0('--- Done sample, ',fastq_files[[5]][i],', Time is: ',Sys.time(),' ---'))

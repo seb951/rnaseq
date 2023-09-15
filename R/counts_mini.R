@@ -1,18 +1,3 @@
-
-
-funny = function(a=1,b=2){
-  
-  if(a ==1){
-    stop('oh oh')
-  }
-  
-
-    print(b)
-    return('super top')
-  
-}
-
-
 #=====================
 ###zcat, random (1%)
 #=====================
@@ -90,7 +75,9 @@ cleanup2 = function (out.dir = 'out/alignments')
 {
 
     rm_cmd1 = paste0('rm ',out.dir,'/alignments/*Aligned.sortedByCoord.out.bam*')
-    system(rm_cmd1)
+    rm_cmd2 = paste0('rm -r ',out.dir,'/alignments/*__STARgenome')
+    
+    system(rm_cmd2)
 
     message(paste0('Done cleanup of temporary (bam) because they are really big, Time is: ',Sys.time()))
     return('')
@@ -123,6 +110,7 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
 
 
 
+
 #======================
 # wrapper : counts_rnaseq
 #======================
@@ -140,6 +128,7 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
     dir.create(file.path(out.dir,'logs'),showWarnings =F)
     dir.create(file.path(out.dir,'alignments'),showWarnings =F)
     dir.create(file.path(out.dir,'mini'),showWarnings =F)
+    dir.create(file.path(out.dir,'flagstats'),showWarnings =F)
     
     #fastq files
     fastq_files = sequences(fq.dir = fq.dir,
@@ -177,6 +166,11 @@ counts_mini_rnaseq = function(fq.dir = params$fq.dir,
                 out_prefix = out_prefix,
                 i = i,
                 out.dir = out.dir)
+        
+        flagstats(out_prefix = out_prefix,
+                  out.dir= out.dir)
+        
+        
               
         #message
         message(paste0('--- Done sample, ',fastq_files[[5]][i],', Time is: ',Sys.time(),' ---'))

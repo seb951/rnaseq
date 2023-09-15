@@ -75,7 +75,7 @@ cleanup2 = function (out.dir = 'out/alignments')
 {
 
     rm_cmd1 = paste0('rm ',out.dir,'/alignments/*Aligned.sortedByCoord.out.bam*')
-    rm_cmd2 = paste0('rm -r ',out.dir,'/alignments/*__STARgenome')
+    rm_cmd2 = paste0('rm -r ',out.dir,'/alignments/*__STAR*')
     
     system(rm_cmd2)
 

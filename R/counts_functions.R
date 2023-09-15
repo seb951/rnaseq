@@ -240,6 +240,8 @@ flagstats = function (
 {
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools flagstats ",out_prefix,'Aligned.sortedByCoord.out.bam >',file.path(out.dir,'flagstats/'),out_prefix,'.flagstats')
   
+  system(cmd)
+  
   message(paste0('Done samtools flagstats, Time is: ',Sys.time()))
   return('')
 }

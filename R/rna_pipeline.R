@@ -140,7 +140,8 @@ if (arguments$args == 'kallisto') {
                     ref.transcriptome = arguments$options$reftranscriptome,
                     threads = arguments$options$threads,
                     txdb.dir = arguments$options$txdbdir,
-                    txdb.file = arguments$options$txdbfile)
+                    txdb.file = arguments$options$txdbfile,
+                    out.dir=arguments$options$outdir)
 }
 #running fusion_rnaseq
 if (arguments$args == 'fusion') {

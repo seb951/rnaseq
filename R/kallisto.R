@@ -81,7 +81,8 @@ ref_txb <- function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotat
 #==========================================
 # gtf downloaded from here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz
 tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
-                        quant.dir = "out/kallisto",
+                        #quant.dir = "out/kallisto",
+                        sequencing_files =  sequences(trim.dir=trim.dir)[[5]],
                         out.dir = "out/gene_counts",
                         txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
     
@@ -89,20 +90,35 @@ tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.ann
     txdb = AnnotationDbi::loadDb(txdb.file)
     k = AnnotationDbi::keys(txdb, keytype = "TXNAME")
     tx2gene = AnnotationDbi::select(txdb, k, "GENEID", "TXNAME")
-    #tx2gene$TXNAME = sapply(strsplit(tx2gene$TXNAME,".",fixed = T), `[`, 1)
+    
+    #Import kallisto data  
+    files = file.path(out.dir,sequencing_files,'abundance.h5')
+    names(files) = sequencing_files
+    txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
+    counts_df = data.frame(counts = txi_tsv$counts);colnames
+    lengths_df = data.frame(lengths = txi_tsv$length)
+    abundance_df = data.frame(abundance = txi_tsv$abundance)
+    write.table(counts_df,file.path(out.dir,'kallisto_counts.tsv'),row.names = T, quote = F, sep = '\t')
+    write.table(lengths_df,file.path(out.dir,'kallisto_lengths.tsv'),row.names = T, quote = F, sep = '\t')
+    write.table(abundance_df,file.path(out.dir,'kallisto_abundance.tsv'),row.names = T, quote = F, sep = '\t')
+    
+    
     
     # Import kallisto data
-    files = file.path(paste0(quant.dir),list.files(quant.dir, pattern = "_R1"), "abundance.tsv")
-    names(files) = list.files(quant.dir, pattern = "_R1")
-    txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
-    count_df = round(txi_tsv$counts)
-    write.table(count_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =T, quote = F, sep = '\t')
-    df_count = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
-    colnames(df_count) = c('GENE_ID', names(files))
-    write.table(df_count,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
-    df_c = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = T)
-    df_c[-1,]
-    write.table(df_c[-1,],file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    #files = file.path(quant.dir,list.files(quant.dir, pattern = "_R1"), "abundance.tsv")
+    #names(files) = list.files(quant.dir, pattern = "_R1")
+    
+    #txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
+    #count_df = round(txi_tsv$counts)
+    #write.table(count_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =T, quote = F, sep = '\t')
+    
+    #df_count = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
+    #colnames(df_count) = c('GENE_ID', names(files))
+    #write.table(df_count,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
+    
+    #df_c = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = T)
+    #df_c[-1,]
+    #write.table(df_c[-1,],file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
     
 
     # Print message
@@ -117,6 +133,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
                             ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.gz',
                             trim.dir = 'out/fastq.trim',
                             quant.dir = 'out/kallisto',
+                            out.dir  = 'out',
                             threads = 12,
                             txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
                             txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
@@ -128,14 +145,11 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     
     # Name of sequencing files
     sequencing_files <- sequences(trim.dir=trim.dir)
-    trim1 <- sequencing_files[[3]]
-    trim2 <- sequencing_files[[4]]
 
-    
     for (i in seq_along(sequencing_files[[5]])) {
         # kallisto quant command
-        kallisto(trim1 = trim1[i],
-                 trim2 = trim2[i],
+        kallisto(trim1 = sequencing_files[[3]][i],
+                 trim2 = sequencing_files[[4]][i],
                  quant.dir =  file.path(quant.dir, sequencing_files[[5]][i]),
                  ref.transcriptome = ref.transcriptome,
                  threads = threads,
@@ -153,7 +167,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     
     # tximport for all
     tximp_counts(txdb.dir = txdb.dir,
-                 quant.dir = quant.dir,
+                 sequencing_files = sequencing_files[[5]],
                  out.dir = out.dir)
     
 }

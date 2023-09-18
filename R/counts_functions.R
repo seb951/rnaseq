@@ -238,7 +238,7 @@ flagstats = function (
     out_prefix =  paste0('rnaseq/out/',sequences()[[5]][1],'_'),
     out.dir = out.dir)
 {
-  out_flagstats = sub('alignments','flagstats',out_prefix)
+  out_flagstats = sub('/alignments','/flagstats',out_prefix)
   cmd = paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),"samtools flagstats ",out_prefix,'Aligned.sortedByCoord.out.bam >',out_flagstats,'flagstats.txt')
   
   system(cmd)

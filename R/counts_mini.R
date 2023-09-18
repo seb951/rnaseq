@@ -90,21 +90,30 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
                 samples = fastq_files[[5]][files])
 {
 
+    flagstats_out = data.frame(sequences = 0, percentage=0)
+  
     for(i in seq_along(samples)){
       expression_temp = read.delim(paste0(out.dir,'/alignments/',samples[i],'_ReadsPerGene.out.tab'), header = F)
       if(i==1) {
         expression_df = as.data.frame(matrix(0,nrow =nrow(expression_temp), ncol = length(samples)+1));
         colnames(expression_df)[1] = 'gene_names';
         colnames(expression_df)[-1] = samples;
-        expression_df[,1]  =expression_temp[,1]
+        expression_df[,1]  = expression_temp[,1]
         }
       expression_df[,i+1] = expression_temp[,4]
         
+      
+      #merge flagstats
+      flag = read.table(paste0(out.dir,'/flagstats/',samples[i],'_flagstats.txt'),sep  = ',',header =F) 
+      flag_sequences = strsplit(flag[13,1],' ')[[1]][1]
+      flagstats_out[i,1] = as.numeric(flag_sequences)
+      flagstats_out[i,2] = round(as.numeric(flag_sequences)/4000,2)
     }
   
     write.csv(expression_df,file.path(out.dir,'expression_df.csv'),row.names =F)
+    write.csv(flagstats_out,file.path(out.dir,'flagstats.csv'),row.names =F)
     
-    message(paste0('Done merging all STAR gene tabs, Time is: ',Sys.time()))
+    message(paste0('Done merging all STAR gene tabs (and flagstats statistics), Time is: ',Sys.time()))
     return('')
 }
 

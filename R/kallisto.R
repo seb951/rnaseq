@@ -174,7 +174,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     }
     
     # tximport for all
-    tximp_counts(sequencing_files = sequencing_files[[5]],
+    tximp_counts(sequencing_files = sequencing_files[[5]][files],
                  out.dir = out.dir)
     
 }

@@ -12,7 +12,7 @@ index <- function(ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.g
     # Kallisto index command 
     cmd <- paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
                   'kallisto index -i ',
-                  gsub('fasta.gz','idx',ref.transcriptome),
+                  gsub('fa.gz|fasta.gz','idx',ref.transcriptome),
                   ' --make-unique ',
                   ref.transcriptome)
     system(cmd)
@@ -41,10 +41,10 @@ kallisto <- function(trim1 = 'out/fastq.trim/RNA_0006_5598_Tumeur_R1_val_1.fq.gz
     # Kallisto quant command
     cmd <- paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
                   'kallisto quant -i ',
-                  gsub('fasta.gz','idx',ref.transcriptome),
+                  gsub('fa.gz|fasta.gz','idx',ref.transcriptome),
                   ' -o ',
                   file.path(quant.dir),
-                  ' -b 100 ',
+                  ' -b 0 ',
                   trim1,
                   ' ',
                   trim2,
@@ -80,8 +80,7 @@ ref_txb <- function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotat
 # tximport counts step
 #==========================================
 # gtf downloaded from here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz
-tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
-                        #quant.dir = "out/kallisto",
+tximp_counts = function(#quant.dir = "out/kallisto",
                         sequencing_files =  sequences(trim.dir=trim.dir)[[5]],
                         out.dir = "out/gene_counts",
                         txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
@@ -95,7 +94,7 @@ tximp_counts = function(txdb.dir = "data/reference_transcriptome/gencode.v43.ann
     files = file.path(out.dir,sequencing_files,'abundance.h5')
     names(files) = sequencing_files
     txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
-    counts_df = data.frame(counts = txi_tsv$counts);colnames
+    counts_df = data.frame(counts = txi_tsv$counts)
     lengths_df = data.frame(lengths = txi_tsv$length)
     abundance_df = data.frame(abundance = txi_tsv$abundance)
     write.table(counts_df,file.path(out.dir,'kallisto_counts.tsv'),row.names = T, quote = F, sep = '\t')
@@ -136,17 +135,26 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
                             out.dir  = 'out',
                             threads = 12,
                             txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
-                            txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite"){
+                            txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite",
+                            nbfiles = params$nbfiles){
  
     # Index, if not present yet, but reference is there, otherwise, kaboom!...
-    if(file.exists(ref.transcriptome) & !file.exists(gsub('fasta.gz','idx',ref.transcriptome))) {
+    if(file.exists(ref.transcriptome) & !file.exists(gsub('fa.gz|fasta.gz','idx',ref.transcriptome))) {
         index(ref.transcriptome = ref.transcriptome)
     }
     
     # Name of sequencing files
     sequencing_files <- sequences(trim.dir=trim.dir)
 
-    for (i in seq_along(sequencing_files[[5]])) {
+    #files to process depends on nbfiles parameter
+    files = seq_along(sequencing_files[[5]])
+    nbfiles =  strsplit(nbfiles,',')[[1]]
+    if(nbfiles[1] == 'all') files = files
+    if(length(nbfiles) == 1 & nbfiles[1] != 'all') {files = files[1:min(length(files),as.numeric(nbfiles))]}
+    if(length(nbfiles) == 2) {files = files[as.numeric(nbfiles[1]):as.numeric(nbfiles[2])]}
+    
+    
+    for (i in files) {
         # kallisto quant command
         kallisto(trim1 = sequencing_files[[3]][i],
                  trim2 = sequencing_files[[4]][i],
@@ -166,8 +174,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     }
     
     # tximport for all
-    tximp_counts(txdb.dir = txdb.dir,
-                 sequencing_files = sequencing_files[[5]],
+    tximp_counts(sequencing_files = sequencing_files[[5]],
                  out.dir = out.dir)
     
 }

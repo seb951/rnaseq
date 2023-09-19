@@ -97,7 +97,7 @@ option_list = list(
 parser <- OptionParser(usage = "%prog [options] QC/counts", option_list=option_list)
 arguments <- parse_args(parser,positional_arguments = 1)
 
-if(arguments$args == 'QC' | arguments$args == 'counts' | arguments$args == 'kallisto' | arguments$args == 'mini' | arguments$args == 'fusion' | arguments$args == 'cnv') {
+if(arguments$args == 'QC' | arguments$args == 'star' | arguments$args == 'kallisto' | arguments$args == 'mini' | arguments$args == 'fusion' | arguments$args == 'cnv') {
     sprintf("Running command ( %s )", arguments$args)
 } else {
     stop(sprintf("Specified command ( %s ) does not exist", arguments$args))
@@ -106,7 +106,7 @@ if(arguments$args == 'QC' | arguments$args == 'counts' | arguments$args == 'kall
 
 
 #running counts_rnaseq wrapper
-if(arguments$args == 'counts') {
+if(arguments$args == 'star') {
     counts_rnaseq(fq.dir = arguments$options$fqdir,
                   trim.dir= arguments$options$trimdir,
                   genomedir = arguments$options$genomeindexdir,
@@ -115,7 +115,7 @@ if(arguments$args == 'counts') {
                   out.dir = arguments$options$outdir,
                   cutadapt=arguments$options$cutadapt,
                   threads= arguments$options$threads,
-                  nbfiles= arguments$options$nbfiles
+                  nbfiles = arguments$options$nbfiles
     )
 }
 
@@ -141,7 +141,8 @@ if (arguments$args == 'kallisto') {
                     threads = arguments$options$threads,
                     txdb.dir = arguments$options$txdbdir,
                     txdb.file = arguments$options$txdbfile,
-                    out.dir=arguments$options$outdir)
+                    out.dir=arguments$options$outdir,
+                    nbfiles = arguments$options$nbfiles)
 }
 #running fusion_rnaseq
 if (arguments$args == 'fusion') {

@@ -19,7 +19,7 @@ sequences = function(fq.dir='data/fastq',
     R2_mini = paste0(file.path(out.dir,'mini',sample_names),'_R2_mini.fq')
     
     if(length(list.files(trim.dir)>0)) {
-    message('It appears that your trimdir is not empty, I will list what is in there in output[[2]],[[3]] & [[4]]')
+    message('It appears that your trimdir is not empty, I will list what is in there in sequences()[c(2:4)]')
     R1_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R1_val_1.fq.gz$'))
     R2_trim = file.path(trim.dir,list.files(trim.dir,pattern = '_R2_val_2.fq.gz$'))
     sample_names = unique(gsub('_R1_val_1.fq.gz','',list.files(trim.dir,pattern = '_R1_val_1.fq.gz$')))
@@ -60,7 +60,7 @@ trimming = function(trim.dir = 'out/fastq.trim',
                  ' --path_to_cutadapt ',
                  cutadapt, ' 1>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/trim_galore.out 2>',ifelse(i>1,'>',''),file.path(out.dir,'logs'),'/trim_galore.err')
     
-    if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out_seq))==F) {system(cmd);message(paste0('Done Trimming, Time is: ',Sys.time()))} else {message(paste0('Skipping Trimming (already done), Time is: ',Sys.time()))}
+    if(file.exists(gsub("/mnt/c",ifelse(Sys.info()['sysname'] == 'Windows','C:',''),out_seq))==F) {system(cmd);message(paste0('Done Trimming file ',i,', Time is: ',Sys.time()))} else {message(paste0('Skipping Trimming (already done), Time is: ',Sys.time()))}
     
     
     return('')

@@ -2,7 +2,7 @@
  * This is a general purpose repository for rnaseq analyses tools/pipelines
  * It contains a script to do either **QC** or **counts**, **kallisto**, **cnv**, **fusion**
    * **QC** uses `fastqc` processes raw *fastq.gz* files and produces a .html general reports and associated QC files for each sample.
-   * **counts** processes raw *.fastq.gz* files and produces a .tsv file of count data.
+   * **star** processes raw *.fastq.gz* files and produces a .tsv file of count data.
  * It also contains a pipeline to go from raw *.fastq.gz* files to count data as described below.
 
 
@@ -65,7 +65,7 @@ Options:
 ``` bash
 Rscript R/rna_pipeline.R kallisto --reftranscriptome data/reference_transcriptome/chr1.fasta.gz --quantdir out/kallisto --trimdir out/fastq.trim
 
-Rscript R/rna_pipeline.R counts \
+Rscript R/rna_pipeline.R star \
 --cutadapt /mnt/sde/renseb01/miniconda3/envs/Rbase/bin/cutadapt \
 --fqdir /mnt/sde/renseb01/Documents/rnaseq/data/fastq/ \
 --trimdir /mnt/sde/renseb01/Documents/rnaseq/out/fastq.trim \
@@ -79,8 +79,8 @@ Rscript R/rna_pipeline.R counts \
 ```
 ## TO DO 
   * urgent:
-    * verify that a minimal example exists for **QC** and **counts**
-    * integrate `gatk` and check the validaty of `STAR` options.
+    * verify that a minimal example exists for **QC** and **star**
+    * integrate `gatk` and check the validity of `STAR` options.
   * not-so-urgent:
     * unit-test the functions, better handling of parameters
 

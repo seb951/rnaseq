@@ -7,7 +7,7 @@ source('R/counts_functions.R')
 # Index command
 #=====================
 index <- function(ref.transcriptome = 'data/reference_transcriptome/chr1.fasta.gz'){
-    # Reference transcriptome: full transcriptome can be found here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.transcripts.fa.gz
+    # Reference transcriptome: full transcriptome can be found here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.transcripts.fa.gz
 
     # Kallisto index command 
     cmd <- paste0(ifelse(Sys.info()['sysname'] == 'Windows','wsl.exe ',''),
@@ -79,7 +79,7 @@ ref_txb <- function(txdb.dir = "data/reference_transcriptome/gencode.v43.annotat
 #==========================================
 # tximport counts step
 #==========================================
-# gtf downloaded from here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz
+# gtf downloaded from here: https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
 tximp_counts = function(#quant.dir = "out/kallisto",
                         sequencing_files =  sequences(trim.dir=trim.dir)[[5]],
                         out.dir = "out/gene_counts",
@@ -91,35 +91,19 @@ tximp_counts = function(#quant.dir = "out/kallisto",
     tx2gene = AnnotationDbi::select(txdb, k, "GENEID", "TXNAME")
     
     #Import kallisto data  
-    files = file.path(out.dir,sequencing_files,'abundance.h5')
-    names(files) = sequencing_files
-    txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
-    counts_df = data.frame(counts = txi_tsv$counts)
+    files_kallisto = file.path(out.dir,sequencing_files,'abundance.h5')
+    names(files_kallisto) = sequencing_files
+    txi_tsv = tximport::tximport(files_kallisto, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
+    counts_df = data.frame(counts = round(txi_tsv$counts,4))
     lengths_df = data.frame(lengths = txi_tsv$length)
     abundance_df = data.frame(abundance = txi_tsv$abundance)
     write.table(counts_df,file.path(out.dir,'kallisto_counts.tsv'),row.names = T, quote = F, sep = '\t')
     write.table(lengths_df,file.path(out.dir,'kallisto_lengths.tsv'),row.names = T, quote = F, sep = '\t')
     write.table(abundance_df,file.path(out.dir,'kallisto_abundance.tsv'),row.names = T, quote = F, sep = '\t')
     
+    system(paste0('gzip ',out.dir,'/*tsv'))
+    saveRDS(txi_tsv,file.path(out.dir,'txi.rds'))
     
-    
-    # Import kallisto data
-    #files = file.path(quant.dir,list.files(quant.dir, pattern = "_R1"), "abundance.tsv")
-    #names(files) = list.files(quant.dir, pattern = "_R1")
-    
-    #txi_tsv = tximport::tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreAfterBar = TRUE)
-    #count_df = round(txi_tsv$counts)
-    #write.table(count_df,file.path(out.dir,'kallisto_counts.tsv'),row.names =T, quote = F, sep = '\t')
-    
-    #df_count = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = F)
-    #colnames(df_count) = c('GENE_ID', names(files))
-    #write.table(df_count,file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
-    
-    #df_c = read.csv(file.path(out.dir,'kallisto_counts.tsv'),sep = '\t',header = T)
-    #df_c[-1,]
-    #write.table(df_c[-1,],file.path(out.dir,'kallisto_counts.tsv'),row.names =F, quote = F,sep = '\t')
-    
-
     # Print message
     message(paste0('Done tximport, Time is: ', Sys.time()))
 }
@@ -144,10 +128,10 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     }
     
     # Name of sequencing files
-    sequencing_files <- sequences(trim.dir=trim.dir)
+    fastq_files <- sequences(trim.dir=trim.dir)
 
     #files to process depends on nbfiles parameter
-    files = seq_along(sequencing_files[[5]])
+    files = seq_along(fastq_files[[5]])
     nbfiles =  strsplit(nbfiles,',')[[1]]
     if(nbfiles[1] == 'all') files = files
     if(length(nbfiles) == 1 & nbfiles[1] != 'all') {files = files[1:min(length(files),as.numeric(nbfiles))]}
@@ -156,15 +140,15 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     
     for (i in files) {
         # kallisto quant command
-        kallisto(trim1 = sequencing_files[[3]][i],
-                 trim2 = sequencing_files[[4]][i],
-                 quant.dir =  file.path(quant.dir, sequencing_files[[5]][i]),
+        kallisto(trim1 = fastq_files[[3]][i],
+                 trim2 = fastq_files[[4]][i],
+                 quant.dir =  file.path(quant.dir, fastq_files[[5]][i]),
                  ref.transcriptome = ref.transcriptome,
                  threads = threads,
                  i = i)
         
         # Message
-        message(paste0('--- Done sample, ', sequencing_files[[5]][i], ' Time is: ', Sys.time(), ' ---'))
+        message(paste0('--- Done sample, ', fastq_files[[5]][i], ' Time is: ', Sys.time(), ' ---'))
     }
     
     # Create TxDb SQL if not present
@@ -174,7 +158,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     }
     
     # tximport for all
-    tximp_counts(sequencing_files = sequencing_files[[5]][files],
+    tximp_counts(sequencing_files = fastq_files[[5]][files],
                  out.dir = out.dir)
     
 }

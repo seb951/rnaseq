@@ -90,7 +90,7 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
                 samples = fastq_files[[5]][files])
 {
 
-    flagstats_out = data.frame(sequences = 0, percentage=0,sample='')
+    flagstats_out = data.frame(sequences = 0, percentage=0,sample=samples)
   
     for(i in seq_along(samples)){
       expression_temp = read.delim(paste0(out.dir,'/alignments/',samples[i],'_ReadsPerGene.out.tab'), header = F)
@@ -102,7 +102,6 @@ mergeSTARGeneTabs = function (out.dir = out.dir,
         }
       expression_df[,i+1] = expression_temp[,4]
         
-      
       #merge flagstats
       flag = read.table(paste0(out.dir,'/flagstats/',samples[i],'_flagstats.txt'),sep  = ',',header =F) 
       flag_sequences = strsplit(flag[13,1],' ')[[1]][1]

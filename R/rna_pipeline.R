@@ -143,7 +143,7 @@ if (arguments$args == 'kallisto') {
                     txdb.file = arguments$options$txdbfile,
                     out.dir=arguments$options$outdir,
                     nbfiles = arguments$options$nbfiles,
-                    fqdir = arugments$options$fqdir)
+                    fqdir = arguments$options$fqdir)
 }
 #running fusion_rnaseq
 if (arguments$args == 'fusion') {

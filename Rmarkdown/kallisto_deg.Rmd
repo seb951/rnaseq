@@ -1,0 +1,220 @@
+---
+title: "kallisto DEGs"
+author: "Sébastien Renaut (sebastien.renaut@criucpq.ulaval.ca)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    number_sections: F
+params:
+  datapath: 'C:/Users/renseb01/Documents/rnaseq'
+  outputpath: '../..' 
+---
+
+
+
+####question
+deconvolution des donnees rnaseq correlation avec cytof
+
+
+correlation avec donnees cliniques.
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = params$datapath)
+knitr::opts_chunk$set(echo = F)
+library(DT) #data viz
+library(ggplot2)
+library(patchwork)
+library(tximport)
+library(GenomicFeatures)
+library(DESeq2)
+library(org.Hs.eg.db)
+library(fgsea)
+```
+
+## upload
+```{r data upload}
+abundance = read.table('kallisto/part1/kallisto_abundance.tsv')
+count = read.table('kallisto/part1/kallisto_counts.tsv')
+length   = read.table('kallisto/part1/kallisto_length.tsv')
+txi = readRDS('kallisto/part1/txi.rds')
+
+clinical_temp = data.frame(sample = colnames(txi$length), 
+                      'Record ID' = sapply(strsplit(colnames(txi$length), "_"), "[",5),
+                      tissue = sapply(strsplit(colnames(txi$length), "_"), "[",6),
+                      check.names = F)
+
+
+```
+
+
+#kallisto sur trimmed VS non-trimmed.
+```{r correls}
+txi_notrim = readRDS('kallisto/part1_notrim/txi.rds')
+samples = colnames(txi_notrim$counts)
+samples = sapply(strsplit(samples, "i5."), "[", 2)
+
+counts_df = data.frame(counts_notrim = c(txi_notrim$counts[,1:4]),
+                       counts = c(txi$counts[,1:4]),
+                       gene = rep(rownames(txi$counts),4),
+                       samples = unlist(lapply(samples,rep,nrow(txi_notrim$counts))))
+
+counts_df$log_notrim = log(counts_df$counts_notrim,10)
+counts_df$log = log(counts_df$counts,10)
+
+counts_df_small = counts_df[counts_df$counts_notrim<20,]
+
+
+#
+plot_effect_of_trimming = ggplot(counts_df, aes(x=counts, y=counts_notrim,color = samples)) +
+  geom_point() +
+  ggtitle("Kallisto counts (trimmed vs raw)") + theme(legend.position = 'none')
+
+
+plot_effect_of_logtrimming = ggplot(counts_df, aes(x=log, y=log_notrim,color = samples)) +
+  geom_point() +
+  ggtitle("log(counts) (trimmed vs raw)")
+
+#
+plot_small = ggplot(counts_df_small, aes(x = counts, y = counts_notrim, col = samples)) +
+  geom_point(shape = 1,alpha = 1/2) +
+  ggtitle("Counts(trimmed vs raw): small values") + theme(legend.position = 'none')
+
+
+plot_small_log = ggplot(counts_df_small, aes(x = log, y = log_notrim, col = samples)) +
+  geom_point(shape = 1,alpha = 1/2) +
+  ggtitle("log(counts) (trimmed vs raw): small values") + theme(legend.position = 'none')
+
+#
+png('lordQC/trimmed_vs_non_trimmed_kallisto.png',width = 800,height = 500) 
+(plot_effect_of_trimming | plot_effect_of_logtrimming) / (plot_small | plot_small_log)+ plot_annotation(tag_levels = 'A')
+dev.off()
+
+
+```
+
+
+
+
+## clinical data
+```{r clinical data}
+files = list.files('data/RNAseq_512_données',full.names = T)
+
+clinical = list()
+temp_names = c()
+
+#load all clinical data
+for(i in seq_along(files)){
+  temp = readxl::read_xlsx(files[i])
+  temp_name = strsplit(files[i],'/')[[1]][3]
+  temp_names[i] = gsub('_2023-09-20.xlsx','',temp_name)
+  
+  clinical[[i]] = temp
+
+  colnames(clinical[[i]])[-1] = paste0(temp_names[i],'_',colnames(clinical[[i]])[-1])
+  }
+
+names(clinical) = temp_names
+
+#check the data
+for(i in seq_along(files)){
+  print(paste0('Nrows of ',strsplit(files[i],'/')[[1]][3], ' is: ',nrow(clinical[[i]])))
+  print(paste0('Ncols of ',strsplit(files[i],'/')[[1]][3], ' is: ',ncol(clinical[[i]])))
+  print(colnames(clinical[[i]])[1])
+  print(all.equal(clinical[[1]][,1],clinical[[i]][,1]))
+}
+
+
+
+#merge
+clinical_bigtable = merge(clinical[[1]],clinical[[2]],by = 'Record ID')
+clinical_bigtable = merge(clinical_bigtable,clinical[[3]],by = 'Record ID')
+clinical_bigtable = merge(clinical_bigtable,clinical[[4]],by = 'Record ID')
+clinical_bigtable = merge(clinical_bigtable,clinical[[6]],by = 'Record ID')
+clinical_bigtable = merge(clinical_bigtable,clinical[[7]],by = 'Record ID')
+clinical_bigtable = merge(clinical_bigtable,clinical[[8]],by = 'Record ID')
+clinical_bigtable = merge(clinical_bigtable,clinical[[9]],by = 'Record ID')
+```
+
+
+
+
+
+## degs
+```{r DEG }
+clinical_bigtable_subset = clinical_bigtable[,colnames(clinical_bigtable) %in%c('Record ID','Follow up_Status at last contact')]
+
+clinical_current_dataset = merge(clinical_temp,clinical_bigtable_subset, by = 'Record ID')
+colnames(clinical_current_dataset)[4] = 'Status_lastcontact'
+clinical_current_dataset$Status_lastcontact[is.na(clinical_current_dataset$Status_lastcontact)] = 'unknown'
+
+dds = DESeqDataSetFromTximport(txi,colData = clinical_current_dataset, ~ tissue)
+dds = DESeq(dds)
+res = results(dds)#, alpha = 0.05)
+res = res[order(res$pvalue),] #order by pval
+res = res[res$baseMean>0,] #remove 0 expression values
+res = res[!is.na(res$padj),] #remove NA
+dim(res)
+head(res)
+res_signif = res[res$padj<0.05,]
+```
+
+
+
+## degs oncogene
+```{r DEG }
+## DEGs
+egfr = 'ENSG00000146648'
+kras = 'ENSG00000133703'
+alk =  'ENSG00000171094'
+
+kras = data.frame(expression=txi$abundance[rownames(txi$abundance) =='ENSG00000133703.14',],sample = colnames(txi$abundance))
+kras = merge(kras,clinical_current_dataset)
+ggplot(data=kras, aes(x=tissue, y=expression,fill=Status_lastcontact)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=len), vjust=1.6, color="white",
+            position = position_dodge(0.9), size=3.5)
+
+```
+
+
+
+## gsea
+```{r fgsea}
+barplot(sort(res_signif$log2FoldChange, decreasing = T))
+
+#conversion from ensembl to entrez
+conversion = mapIds(org.Hs.eg.db, keys = sapply(strsplit(rownames(res_signif),'.',fixed = T),"[",1), keytype="ENSEMBL", column = "ENTREZID")
+res_signif$ensembl = names(conversion)
+res_signif$entrezID = conversion
+
+#remove NAs
+res_signif = res_signif[!is.na(res_signif$entrezID),]
+fc = res_signif$log2FoldChange
+names(fc) = res_signif$entrezID
+fc = fc[order(fc,decreasing=T)]
+
+#fgsea analysis
+pathways <- reactomePathways(res_signif$entrezID)
+fgseaRes <- fgsea(pathways,stats = fc, minSize=15, maxSize = 500)
+head(fgseaRes[order(padj, -abs(NES)), ], n=10)
+```
+
+
+# session info  
+```{r session, message= T}
+###session
+sessionInfo()
+```
+
+#option1
+txi_originalcounts <- tximport(files, type = "kallisto", tx2gene = tx2gene)
+dds <- DESeqDataSetFromTximport(txi_originalcounts, samples, ~1)
+
+
+#option2
+rna <- txi_lengthScaledTPM$counts
+dds <- DESeqDataSetFromMatrix(countData = round(rna,0), colData = clin_rnaf, design = ~ 1)
+

@@ -1,0 +1,198 @@
+---
+title: "QC summary LORD"
+author: "Sébastien Renaut (sebastien.renaut@criucpq.ulaval.ca)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    number_sections: F
+params:
+  datapath: 'C:/Users/renseb01/Documents/rnaseq'
+  outputpath: '../..' 
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = params$datapath)
+knitr::opts_chunk$set(echo = F)
+library(DT) #data viz
+library(ggplot2)
+library(patchwork)
+library(readxl)
+library(dplyr)
+```
+
+# Data
+* 736 samples analysed: 
+  * **Part1: 64 samples**
+  * **Part2: 416 samples**
+  * **Part3: 256 samples**
+  * **Part4: 288 samples**
+* Alignments statistics based on a pseudo-random set of 200,000 sequences for each sample.
+  * Percentage aligned correspond to the fraction of reads alignment to a transcribed region of the genome.
+* **No samples are both below 70M reads AND below 70% aligned**.
+
+```{r data}
+part1  = read.delim('lordQC/fastqc_statistics_part1.csv',header = T,sep = ' ')
+part2  = read.delim('lordQC/fastqc_statistics_part2.csv',header = T,sep = ' ')
+part3  = read.delim('lordQC/fastqc_statistics_part3.csv',header = T,sep = ' ')
+part4  = read.delim('lordQC/fastqc_statistics_part4.csv',header = T,sep = ' ')
+
+#rbind
+part1 = data.frame(part1,part = 'part1')
+part2 = data.frame(part2,part = 'part2')
+part3 = data.frame(part3,part = 'part3')
+part4 = data.frame(part4,part = 'part4')
+sequences = rbind(part1, part2, part3, part4)
+
+
+#order and keep only one...
+sequences = sequences[order(sequences$sample),]
+
+#clean up columns
+sequences = sequences[seq(1,nrow(sequences),by = 2),]
+sequences  = sequences[,c(1,3,4,5,6,8,9,10,12)]
+colnames(sequences)[4]  = 'total.seq(10e6)' 
+sequences[,4] = round(sequences[,4],2)
+```
+
+***  
+
+
+## Outliers (Alignments) 
+```{r mini_alignments} 
+part1 = read.csv('lordmini_alignments/expression_df_part1.csv', header = T)
+part2 = read.csv('lordmini_alignments/expression_df_part2.csv', header = T)
+part3 = read.csv('lordmini_alignments/expression_df_part3.csv', header = T)
+part4 = read.csv('lordmini_alignments/expression_df_part4.csv', header = T)
+
+align  = data.frame(reads = c(colSums(part1[-c(1:4),-1]),colSums(part2[-c(1:4),-1]),colSums(part3[-c(1:4),-1]),colSums(part4[-c(1:4),-1])))
+align$sample = c(colnames(part1[,-1]),colnames(part2[,-1]),colnames(part3[,-1]),colnames(part4[,-1]))
+align$bio_sample  = sapply( strsplit(align$sample,split="_i5.",fixed = T), "[", 2) 
+align$percentage_aligned = round(align$reads/2000,2)
+align = align[,c(3,1,4)]
+
+align_sequences = merge(align,sequences,by = 'bio_sample')
+too_low = align_sequences[align_sequences$percentage_aligned<70,]
+too_low = too_low[order(too_low$percentage_aligned),]
+
+#rownames(align) = NULL
+#too_low = align[align$percentage_aligned<70,]
+#too_low = too_low[order(too_low$percentage_aligned),]
+
+datatable(too_low,caption = htmltools::tags$caption(htmltools::strong("ALIGNMENT PERCENTAGE BELOW 70%"), style="color:darkred"))
+```
+
+
+
+## Outliers (sequences)
+```{r too many}
+too_many_seq = align_sequences[align_sequences$`total.seq(10e6)` > 200,]
+too_few_seq = align_sequences[align_sequences$`total.seq(10e6)` < 50,]
+too = rbind(too_many_seq,too_few_seq)
+datatable(too[order(too$`total.seq(10e6)`),],caption = htmltools::tags$caption(htmltools::strong("TOO MANY/FEW (below 50M) SEQUENCES"), style="color:darkred"))
+
+
+datatable(too_low,caption = htmltools::tags$caption(htmltools::strong("ALIGNMENT PERCENTAGE BELOW 70%"), style="color:darkred"))
+```
+
+
+
+***  
+
+# Summary plots 
+```{r plots, fig.height = 8,message=FALSE}
+align_sequences = merge(align,sequences,by = 'bio_sample')
+align_sequences = align_sequences[align_sequences$`total.seq(10e6)`<200,]
+
+#histograms
+hist_reads = ggplot(align_sequences, aes(x=`total.seq(10e6)`)) +
+    geom_histogram() + 
+    xlab("Total Nb of Sequences (10e6)")+
+   ggtitle("Sequencing outputs (992 Paired-Ends samples)")
+
+hist_phred = ggplot(align_sequences, aes(x=mean_quality)) +
+    geom_histogram() + 
+    xlab("Phred Score") + 
+     ggtitle("Mean quality of reads")
+    
+
+hist_align = ggplot(align_sequences, aes(x=percentage_aligned)) +
+    geom_histogram() + 
+    xlab("Percentage")+
+    ggtitle("Percentage of Sequences aligned to transcribed\nregion of the genome (based on 200,000 reads)") 
+  
+
+
+#seqrin
+align_sequences_rin = align_sequences[align_sequences$RIN>1,]
+plot_seq_rin = ggplot(align_sequences_rin, aes(x=RIN, y=`total.seq(10e6)`)) +
+  geom_point(position="dodge") +
+  geom_smooth(method = "lm",formula = y ~ x) +
+ ggtitle("Total number of sequences\nas a function of RIN score")
+
+#seqtype
+plot_seq_type = ggplot(align_sequences, aes(x=type, y=`total.seq(10e6)`, fill=type)) +
+  geom_violin(position="dodge") +
+  geom_jitter(shape=16, position=position_jitter(0.1)) +
+  ggtitle("Number of sequences as a function of tissue type") +
+  theme(legend.position = 'none')
+
+#seqqual
+plot_seq_qual = ggplot(align_sequences_rin, aes(x=mean_quality, y=`total.seq(10e6)`)) +
+  geom_point(position="dodge") +
+  geom_smooth(method = "lm",formula = y ~ x) +
+ ggtitle("Number of sequences as a function of quality") +
+  xlab("Phred Score")
+
+#qualtissue
+plot_qual_type = ggplot(align_sequences, aes(x=type, y=mean_quality, fill=type)) +
+  geom_violin(position="dodge") + 
+  geom_jitter(shape=16, position=position_jitter(0.1)) +
+  ggtitle("Reads quality as a function of tissue type")+
+  theme(legend.position = 'none')+
+  ylab("Phred Score")
+  
+
+#
+plot_seq_mean = ggplot(align_sequences_rin, aes(x=mean_quality, y=percentage_aligned)) +
+  geom_point(position="dodge") +
+  geom_smooth(method = "lm",formula = y ~ x) +
+ ggtitle("Percentage of sequences aligned\nas a function of reads quality") +
+  xlab("Phred Score")
+
+#
+plot_align_type = ggplot(align_sequences, aes(x=type, y=percentage_aligned, fill=type)) +
+  geom_violin(position="dodge") + 
+  geom_jitter(shape=16, position=position_jitter(0.1)) +
+  ggtitle("Percentage of sequences aligned\nas a function of tissue type")+
+  theme(legend.position = 'none')
+
+#output
+pdf('lordQC/LORD_qc.pdf',width = 15,height = 12) 
+((hist_reads|hist_phred|hist_align) / (plot_seq_qual|plot_seq_rin|plot_seq_mean) / (plot_seq_type|plot_qual_type|plot_align_type)) +plot_annotation(tag_levels = list('1'))
+dev.off()
+
+#output
+pdf('lordQC/violon.pdf',width = 15,height = 10) 
+(plot_seq_type+plot_qual_type+plot_align_type) +plot_annotation(tag_levels = list('1'))
+dev.off()
+
+```
+
+
+
+#dominique veut les stats pour une coupe d'invividus:
+```{r correls}
+resume = read_xlsx('2023-10-03_Resume_nombre_reads_RNAseq_500_ADK.xlsx',sheet = 'List_<70M_reads')
+
+resume2 = merge(resume,align_sequences, by.x = 'Nom de librairie', by.y = 'bio_sample',all.x =T)
+
+write.table(resume2, 'rnaseq/resume2.csv')
+
+```
+
+
+
+
+

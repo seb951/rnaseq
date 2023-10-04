@@ -120,7 +120,8 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
                             threads = 12,
                             txdb.dir = "data/reference_transcriptome/gencode.v43.annotation.gtf",
                             txdb.file = "data/reference_transcriptome/gencode.v43.annotation.sqlite",
-                            nbfiles = params$nbfiles){
+                            nbfiles = params$nbfiles,
+                            fqdir = ''){
  
     # Index, if not present yet, but reference is there, otherwise, kaboom!...
     if(file.exists(ref.transcriptome) & !file.exists(gsub('fa.gz|fasta.gz','idx',ref.transcriptome))) {
@@ -128,7 +129,7 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     }
     
     # Name of sequencing files
-    fastq_files <- sequences(trim.dir=trim.dir)
+    fastq_files <- sequences(trim.dir=trim.dir,fq.dir = fqdir)
 
     #files to process depends on nbfiles parameter
     files = seq_along(fastq_files[[5]])
@@ -140,8 +141,8 @@ kallisto_rnaseq <- function(idx.dir ='data/index',
     
     for (i in files) {
         # kallisto quant command
-        kallisto(trim1 = fastq_files[[3]][i],
-                 trim2 = fastq_files[[4]][i],
+        kallisto(trim1 = fastq_files[[1]][i],
+                 trim2 = fastq_files[[2]][i],
                  quant.dir =  file.path(quant.dir, fastq_files[[5]][i]),
                  ref.transcriptome = ref.transcriptome,
                  threads = threads,

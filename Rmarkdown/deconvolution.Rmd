@@ -1,0 +1,92 @@
+---
+title: "deconvolution of bulk RNAseq from HLCA reference scRNA experiment"
+author: "Sébastien Renaut (sebastien.renaut@criucpq.ulaval.ca)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    number_sections: F
+params:
+  datapath: 'C:/Users/renseb01/Documents/rnaseq'
+  outputpath: '../..' 
+  hlca: 'C:/Users/renseb01/Documents/scRNA/scRNA/data/HLCA'
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = params$datapath)
+knitr::opts_chunk$set(echo = F)
+library(Seurat)
+library(omnideconv)
+library(dplyr)
+```
+
+
+# Download a reference Seurat object 
+* Download `hlca_dataset_587k_cells.rds` reference from [here](https://cellxgene.cziscience.com/collections/6f6d381a-7701-4781-935c-db10d30de293)
+* 587k annotated human lung cells
+* Watch out, it's **BIG** (5GB) !
+```{bash download reference}
+curl -o local.rds "https://corpora-data-prod.s3.amazonaws.com/7bcad396-49c3-40d9-80c1-16d74e7b88bd/local.rds?AWSAccessKeyId=ASIATLYQ5N5XTNFZ64PH&Signature=nPRw3OfEs2BAJ53VRTUyWaM%2Bj7g%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJHMEUCIFn3rrqkhDNH8Z%2F2UQl%2Bj8cirrNV5AlvILBUr7dIDmSZAiEAj3yBZjO6L4RlbEZcCKGFCerGRCfirs7l%2B5UY2qE44hYq6wMIdxABGgwyMzE0MjY4NDY1NzUiDBMV7F1OUVQgBqAmmCrIA2HOpq%2BUq0pzc04tuUeOEhcMF42Dh3tHXcnykTan1ggtgbRDN9lZJ3oXheGiI9%2FF%2F2K6LsfCNKZjAEqjYqkyA0I%2FMDJCmfMrA8sXxvgENlKHAC%2FeFN4EZe1fL6AzIeY36%2FEt1tEFfQ%2F%2Fi4FLmlG4x9ep89A2OxmfsEMmdgxwbBnIo7FB2AmXq2di5i3ay43M6wBCHaxZ5XCF4ooPQ%2FjzIWcs9VMsLKwxJnC2S%2BeNhYNg3P8yMlQtkci4d5V2avPxdLRxlXFQOyN6VSZPufsZ583m%2BCw7fd2OXI3aIQFUjApE0YE1FILwIGJUlqnXEOE%2BF9QKTFYLTsesucOhKCpGpaBxfJWmi7BHyKz4JkEHpeQYJ1jAZoDb2i%2F6t6wjkfnlz%2BN2c4yrYIbSFeienxQf5LXnwOphMGxhMYwwaYuz4C7EpTCIykaPdPZ790lc%2FK7tjSLa9QODjWA%2B3PYnKXWemUzcTrPcs5j1qbbbXa2sGqWcTK4zPB%2FQREqB%2Ft9nL4oglzUmH4oc1hVF%2B3QZD%2BKMyhuD96nayo5MJ5eqS%2FjRTpobuuOAKTW5vh%2FjK%2F8iV5c8i3u%2F19TNJjXWf1ui%2Fmp%2F0C6exz3qXRSc8TClq4CpBjqlASQ%2BDVWcaEYGT6diPbaIUxlI%2BX184UsHVcZNq%2FKdjLvsB0H9QvJqR%2Fpw1IKRAEv880iFS7qN73MCF1Kw7xS7SvL6PoDic4fzkRzJ9%2BkC0N2lr4SzhErtTc%2B1GyN3CWwH967HfLXq4vPadzvk08TTNTbJAgJEKe84FKHm%2F8wUKhcZhIR6Ek7PpBvn4THSamHKXzPjtnPTAur9THjrY8A8g3ZjCJjlZQ%3D%3D&Expires=1697224687"
+```
+
+
+#Generate the reference matrix for the deconvolution
+```{r reference}
+#load HLCA reference
+reference = readRDS(file.path(params$hlca,"hlca_dataset_587k_cells.rds"))
+data = GetAssayData(reference,slot = 'count')
+
+#keep top10% most variable genes
+variance_genes = FindVariableFeatures(data)
+cutoff = quantile(variance_genes$vst.mean,seq(0.1,by = 0.1))[9]
+variable_data = data[variance_genes$vst.mean>cutoff,]
+
+#keep all annotations & batch (reference study) effect, but only 10% of cell data
+cell_type_annotations = reference@meta.data[,colnames(reference@meta.data) %in% c('ann_level_1','ann_level_2','ann_level_3','ann_level_4','ann_level_5','ann_finest_level','study')]
+cell_type_annotations$cellname = rownames(cell_type_annotations)
+cell_type_annotations_10percent = cell_type_annotations %>% group_by(ann_finest_level) %>% slice_head(prop = 0.1)
+
+#keep a subset of cells (10%)
+variable_randomcelldata = variable_data[,colnames(variable_data) %in% cell_type_annotations_10percent$cellname]
+
+#write stuff
+write.csv(cell_type_annotations,file.path(params$hlca,'cell_type_annotations.csv'))
+saveRDS(variable_randomcelldata,file.path(params$hlca,'celldata.rds'))
+```
+
+## deconvo Proof of Concept
+```{r POC}
+#rajouter ctrol negatif?
+#controle negatifs: renal Cells
+#large vs small cells cancer...
+
+# More examples can be found in the unit tests at tests/testthat/test-b-buildmodel.R
+data("single_cell_data_1")
+data("cell_type_annotations_1")
+data("batch_ids_1")
+data("bulk")
+
+single_cell_data <- single_cell_data_1[1:2000, 1:500]
+cell_type_annotations <- cell_type_annotations_1[1:500]
+batch_ids <- batch_ids_1[1:500]
+bulk <- bulk[1:2000, ]
+
+#1. Build a Signature Matrix
+signature_matrix_momf <- build_model(single_cell_data, cell_type_annotations, "momf",bulk_gene_expression = bulk)
+signature_matrix_dwls <- build_model(single_cell_data, cell_type_annotations, "dwls",bulk_gene_expression = bulk)
+signature_matrix_music <- build_model(single_cell_data, cell_type_annotations, "music",bulk_gene_expression = bulk)
+
+#2. Deconvolute
+deconv_momf = deconvolute(bulk_gene_expression=bulk,signature=signature_matrix_momf,method = "momf",single_cell_object = single_cell_data,cell_type_annotations = cell_type_annotations, batch_ids = batch_ids)
+deconv_dwls = deconvolute(bulk_gene_expression=bulk,signature=signature_matrix_dwls,method = "dwls",single_cell_object = single_cell_data,cell_type_annotations = cell_type_annotations, batch_ids = batch_ids)
+deconv_music = deconvolute(bulk_gene_expression=bulk,signature=NULL,method = "music",single_cell_object = single_cell_data,cell_type_annotations = cell_type_annotations, batch_ids = batch_ids)
+```
+
+
+
+
+# session info  
+```{r session, message= T}
+###session
+sessionInfo()
+```

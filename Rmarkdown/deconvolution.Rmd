@@ -18,6 +18,9 @@ knitr::opts_chunk$set(echo = F)
 library(Seurat)
 library(omnideconv)
 library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
 ```
 
 
@@ -25,7 +28,7 @@ library(dplyr)
 * Download `hlca_dataset_587k_cells.rds` reference from [here](https://cellxgene.cziscience.com/collections/6f6d381a-7701-4781-935c-db10d30de293)
 * 587k annotated human lung cells
 * Watch out, it's **BIG** (5GB) !
-```{bash download reference}
+```{bash download reference, eval=F}
 curl -o local.rds "https://corpora-data-prod.s3.amazonaws.com/7bcad396-49c3-40d9-80c1-16d74e7b88bd/local.rds?AWSAccessKeyId=ASIATLYQ5N5XTNFZ64PH&Signature=nPRw3OfEs2BAJ53VRTUyWaM%2Bj7g%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJHMEUCIFn3rrqkhDNH8Z%2F2UQl%2Bj8cirrNV5AlvILBUr7dIDmSZAiEAj3yBZjO6L4RlbEZcCKGFCerGRCfirs7l%2B5UY2qE44hYq6wMIdxABGgwyMzE0MjY4NDY1NzUiDBMV7F1OUVQgBqAmmCrIA2HOpq%2BUq0pzc04tuUeOEhcMF42Dh3tHXcnykTan1ggtgbRDN9lZJ3oXheGiI9%2FF%2F2K6LsfCNKZjAEqjYqkyA0I%2FMDJCmfMrA8sXxvgENlKHAC%2FeFN4EZe1fL6AzIeY36%2FEt1tEFfQ%2F%2Fi4FLmlG4x9ep89A2OxmfsEMmdgxwbBnIo7FB2AmXq2di5i3ay43M6wBCHaxZ5XCF4ooPQ%2FjzIWcs9VMsLKwxJnC2S%2BeNhYNg3P8yMlQtkci4d5V2avPxdLRxlXFQOyN6VSZPufsZ583m%2BCw7fd2OXI3aIQFUjApE0YE1FILwIGJUlqnXEOE%2BF9QKTFYLTsesucOhKCpGpaBxfJWmi7BHyKz4JkEHpeQYJ1jAZoDb2i%2F6t6wjkfnlz%2BN2c4yrYIbSFeienxQf5LXnwOphMGxhMYwwaYuz4C7EpTCIykaPdPZ790lc%2FK7tjSLa9QODjWA%2B3PYnKXWemUzcTrPcs5j1qbbbXa2sGqWcTK4zPB%2FQREqB%2Ft9nL4oglzUmH4oc1hVF%2B3QZD%2BKMyhuD96nayo5MJ5eqS%2FjRTpobuuOAKTW5vh%2FjK%2F8iV5c8i3u%2F19TNJjXWf1ui%2Fmp%2F0C6exz3qXRSc8TClq4CpBjqlASQ%2BDVWcaEYGT6diPbaIUxlI%2BX184UsHVcZNq%2FKdjLvsB0H9QvJqR%2Fpw1IKRAEv880iFS7qN73MCF1Kw7xS7SvL6PoDic4fzkRzJ9%2BkC0N2lr4SzhErtTc%2B1GyN3CWwH967HfLXq4vPadzvk08TTNTbJAgJEKe84FKHm%2F8wUKhcZhIR6Ek7PpBvn4THSamHKXzPjtnPTAur9THjrY8A8g3ZjCJjlZQ%3D%3D&Expires=1697224687"
 ```
 
@@ -41,52 +44,200 @@ variance_genes = FindVariableFeatures(data)
 cutoff = quantile(variance_genes$vst.mean,seq(0.1,by = 0.1))[9]
 variable_data = data[variance_genes$vst.mean>cutoff,]
 
-#keep all annotations & batch (reference study) effect, but only 10% of cell data
+#keep all annotations & batch (reference study) effect, but only 1% of cell data (5800 cells)
 cell_type_annotations = reference@meta.data[,colnames(reference@meta.data) %in% c('ann_level_1','ann_level_2','ann_level_3','ann_level_4','ann_level_5','ann_finest_level','study')]
 cell_type_annotations$cellname = rownames(cell_type_annotations)
-cell_type_annotations_10percent = cell_type_annotations %>% group_by(ann_finest_level) %>% slice_head(prop = 0.1)
+cell_type_annotations_1percent = cell_type_annotations %>% group_by(ann_finest_level) %>% slice_head(prop = 0.01)
+cell_type_annotations_1percent = cell_type_annotations_1percent[order(cell_type_annotations_1percent$cellname),]
 
-#keep a subset of cells (10%)
-variable_randomcelldata = variable_data[,colnames(variable_data) %in% cell_type_annotations_10percent$cellname]
+
+#keep a subset of cells (1%)
+variable_singlecelldata_1percent = variable_data[,colnames(variable_data) %in% cell_type_annotations_1percent$cellname]
+variable_singlecelldata_1percent = variable_singlecelldata_1percent[,order(colnames(variable_singlecelldata_1percent))]
+
 
 #write stuff
-write.csv(cell_type_annotations,file.path(params$hlca,'cell_type_annotations.csv'))
-saveRDS(variable_randomcelldata,file.path(params$hlca,'celldata.rds'))
+write.csv(cell_type_annotations_1percent,file.path(params$hlca,'cell_type_annotations_1percent.csv'))
+write.csv(variable_singlecelldata_1percent,file.path(params$hlca,'variable_singlecelldata_1percent.csv'))
 ```
 
-## deconvo Proof of Concept
-```{r POC}
-#rajouter ctrol negatif?
-#controle negatifs: renal Cells
-#large vs small cells cancer...
 
-# More examples can be found in the unit tests at tests/testthat/test-b-buildmodel.R
+
+
+## deconvo Proof of Concept from example data
+```{r POC,eval = F}
+#rajouter controle negatif? (e.g. Single cell data for renal Cells which should be present at 0 percent in the human lung datasets...)
+#controle: large vs small cells cancer (NSCLC vs SCLC)
+
+#1.Get data
 data("single_cell_data_1")
 data("cell_type_annotations_1")
 data("batch_ids_1")
 data("bulk")
 
-single_cell_data <- single_cell_data_1[1:2000, 1:500]
-cell_type_annotations <- cell_type_annotations_1[1:500]
-batch_ids <- batch_ids_1[1:500]
-bulk <- bulk[1:2000, ]
+sc_data <- single_cell_data_1[1:2000, 1:500] #matrix. 2000 genes X 500 cells. Integers (Counts). Raw.
+ct_annotations <- cell_type_annotations_1[1:500] #vector. 500 values. Cell types. characters.
+batch_ids <- batch_ids_1[1:500] #vector. 500 values. P1-P4. Characters.
+bulk <- bulk[1:2000, ] #matrix. 2000 genes X 8 cells. Floats (Counts). Raw.
 
-#1. Build a Signature Matrix
-signature_matrix_momf <- build_model(single_cell_data, cell_type_annotations, "momf",bulk_gene_expression = bulk)
-signature_matrix_dwls <- build_model(single_cell_data, cell_type_annotations, "dwls",bulk_gene_expression = bulk)
-signature_matrix_music <- build_model(single_cell_data, cell_type_annotations, "music",bulk_gene_expression = bulk)
 
-#2. Deconvolute
-deconv_momf = deconvolute(bulk_gene_expression=bulk,signature=signature_matrix_momf,method = "momf",single_cell_object = single_cell_data,cell_type_annotations = cell_type_annotations, batch_ids = batch_ids)
-deconv_dwls = deconvolute(bulk_gene_expression=bulk,signature=signature_matrix_dwls,method = "dwls",single_cell_object = single_cell_data,cell_type_annotations = cell_type_annotations, batch_ids = batch_ids)
-deconv_music = deconvolute(bulk_gene_expression=bulk,signature=NULL,method = "music",single_cell_object = single_cell_data,cell_type_annotations = cell_type_annotations, batch_ids = batch_ids)
+#2. Build a Signature Matrix
+signature_matrix_momf <- build_model(sc_data, ct_annotations, "momf",bulk_gene_expression = bulk)
+
+#3. Deconvolute
+deconv_momf = deconvolute(bulk_gene_expression=bulk,
+                          signature=signature_matrix_momf,
+                          method = "momf",
+                          single_cell_object = sc_data,
+                          cell_type_annotations = ct_annotations,
+                          batch_ids = batch_ids)
+
+```
+
+
+```{r real data deconvolution}
+#1. get data (RNAseq expression data)
+txi = readRDS(file.path(params$datapath,'lord_kallisto/part3/txi.rds'))
+
+txi$abundance = txi$abundance[,1:10]
+#read stuff
+cell_type_annotations = read.csv(file.path(params$hlca,'cell_type_annotations_1percent.csv'), row.names = 1)
+variable_singlecelldata_1percent = as.matrix(read.csv(file.path(params$hlca,'variable_singlecelldata_1percent.csv'),row.names = 1))
+
+bulk = as.matrix(txi$abundance[sapply(strsplit(rownames(txi$abundance), ".",fixed = T), "[",1) %in% rownames(variable_singlecelldata_1percent),])
+bulk = bulk[!duplicated(sapply(strsplit(rownames(bulk), ".",fixed = T), "[",1) ),]
+rownames(bulk) = sapply(strsplit(rownames(bulk), ".",fixed = T), "[",1) #matrix. 2800 genes X 10 cells. Floats (Counts). Raw abundance (so TPM)
+
+sc_data = variable_singlecelldata_1percent[rownames(variable_singlecelldata_1percent) %in% rownames(bulk),] #matrix. 2800 genes X 5802 cells. Integers (Counts). Raw.
+
+ct_annotations <- as.character(cell_type_annotations$ann_level_2) #vector. 5802 values. Cell types. characters.
+batch_ids <- as.character(cell_type_annotations$study) #vector. 5802 values. 11 studies. Characters.
+
+#2. Build a Signature Matrix
+signature_matrix_music <- build_model(sc_data, ct_annotations, "music", bulk_gene_expression = bulk, batch_ids = batch_ids)
+signature_matrix_bisque <- build_model(sc_data, ct_annotations, "bisque", bulk_gene_expression = bulk, batch_ids = batch_ids)
+signature_matrix_DWLS <- build_model(sc_data, ct_annotations, "DWLS", bulk_gene_expression = bulk, batch_ids = batch_ids)
+signature_matrix_momf <- build_model(sc_data, ct_annotations, "momf", bulk_gene_expression = bulk, batch_ids = batch_ids)
+
+
+#3. Deconvolute
+deconv_music = deconvolute(bulk_gene_expression=bulk,
+                          signature=signature_matrix_music,
+                          method = "music",
+                          single_cell_object = sc_data,
+                          cell_type_annotations = ct_annotations,
+                          batch_ids = batch_ids)
+
+deconv_bisque = deconvolute(bulk_gene_expression=bulk,
+                          signature=signature_matrix_bisque,
+                          method = "bisque",
+                          single_cell_object = sc_data,
+                          cell_type_annotations = ct_annotations,
+                          batch_ids = batch_ids)
+
+deconv_momf = deconvolute(bulk_gene_expression=bulk,
+                          signature=signature_matrix_momf,
+                          method = "momf",
+                          single_cell_object = sc_data,
+                          cell_type_annotations = ct_annotations,
+                          batch_ids = batch_ids)
+
 ```
 
 
 
+```{r compare methods}
+cors = data.frame(celltypes = colnames(deconv_bisque), cor = 0, fraction_bisque = 0,fraction_music = 0)
+
+for(i in 1:nrow(cors)){
+  cors$cor[i] = cor(deconv_bisque[,i],deconv_music[,i])
+  cors$fraction_bisque[i] = mean(deconv_bisque[,i])
+  cors$fraction_music[i] = mean(deconv_music[,i])
+  }
+
+```
+
+
+```{r cell types plots}
+#plots
+celltypes = data.frame(deconv_music, tissue = sapply(strsplit(rownames(deconv_music), "_"), "[",6))
+celltypes_longer = pivot_longer(celltypes,cols = 1:ncol(deconv_music),values_to = 'fraction of total')
+
+celltypes_longer_subset = celltypes_longer %>% filter(name %in% c('AT1','AT2','B.cell.lineage','Rare','Innate.lymphoid.cell.NK','T.cell.lineage','Dendritic.cells'))
+
+p1 = ggplot(celltypes_longer_subset, aes(x = tissue, y = `fraction of total`,fill= tissue)) + geom_violin() +
+  facet_wrap(~name, scales = "free_y") + ggtitle('Cell type proportions after deconvolution: 128 patients (Tumor & Normal samples)')
+
+pdf(file.path(params$datapath,paste0('celltypes_deconvolution.pdf')),width = 12,height = 8)
+p1
+dev.off()
+```
+
+
+#Big reference (2.8M cells)
+  * subsetted for 6 diseases (188k cells)
+```{r big reference}
+#in R
+fix_convert = function(h5seurat = "hlca_subset_2.8M_cells.h5ad") {
+
+  f <- hdf5r::H5File$new(h5seurat, "r+")
+  groups <- f$ls(recursive = TRUE)
+  
+  #
+  print(paste0('The number of categories is: ',length(groups$name[grepl("categories", groups$name)])))
+  for (name in groups$name[grepl("categories", groups$name)]) {
+    names <- strsplit(name, "/")[[1]]
+    names <- c(names[1:length(names) - 1], "levels")
+    new_name <- paste(names, collapse = "/")
+    f[[new_name]] <- f[[name]]
+  }
+  
+  #
+  print(paste0('The number of codes is: ',length(groups$name[grepl("codes", groups$name)])))
+  for (name in groups$name[grepl("codes", groups$name)]) {
+    names <- strsplit(name, "/")[[1]]
+    names <- c(names[1:length(names) - 1], "values")
+    new_name <- paste(names, collapse = "/")
+    f[[new_name]] <- f[[name]]
+    grp <- f[[new_name]]
+    grp$write(args = list(1:grp$dims), value = grp$read() + 1)
+  }
+
+    f$close_all()
+
+    return('fixed the levels & groups conversion')
+  }
+
+#
+SeuratDisk::Convert("hlca_subset_2.8M_cells.h5ad", dest = "h5seurat", overwrite = TRUE)
+fix_convert('hlca_subset_2.8M_cells.h5seurat')
+bigdata_subset <- SeuratDisk::LoadH5Seurat("hlca_subset_2.8M_cells.h5seurat",meta.data = FALSE,misc=FALSE)
+
+metadata = read.csv('hlca_subset_2.8M_cells.csv',row.names =  1)
+
+bigdata_subset@meta.data = metadata
+```
+
+
+# R plots
+```{r plots}
+bigdata_subset@meta.data$ann_level_3[bigdata_subset@meta.data$ann_level_3==''] = 'Unknown'
+cols = c('purple','red','darkblue',RColorBrewer::brewer.pal(5,'Set2'),RColorBrewer::brewer.pal(12,'Set3'),RColorBrewer::brewer.pal(3,'Set1'),'black')
+
+plot_level1 = DimPlot(bigdata_subset,raster = F,group.by = 'ann_level_1') + ggtitle('Coarse annotation: 188k cells, 6 lung diseases')
+plot_level3 = DimPlot(bigdata_subset,raster = F,group.by = 'ann_level_3',cols = cols) + ggtitle('Fine annotation: 188k cells, 6 lung diseases')
+plot_disease = DimPlot(bigdata_subset,raster = F,group.by = 'disease',cols = RColorBrewer::brewer.pal(6,'Set1')) + ggtitle('Diseases: 188k cells, 6 lung diseases')
+
+png(file.path(params$datapath,'bigdata_subset.png'),width = 2500,height = 1000)
+plot_level1 + plot_level3 + plot_disease + plot_annotation(tag_levels = 'A')
+dev.off()
+```
 
 # session info  
 ```{r session, message= T}
 ###session
 sessionInfo()
+
 ```
+
+

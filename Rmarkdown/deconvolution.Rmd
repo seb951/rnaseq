@@ -47,18 +47,18 @@ variable_data = data[variance_genes$vst.mean>cutoff,]
 #keep all annotations & batch (reference study) effect, but only 1% of cell data (5800 cells)
 cell_type_annotations = reference@meta.data[,colnames(reference@meta.data) %in% c('ann_level_1','ann_level_2','ann_level_3','ann_level_4','ann_level_5','ann_finest_level','study')]
 cell_type_annotations$cellname = rownames(cell_type_annotations)
-cell_type_annotations_1percent = cell_type_annotations %>% group_by(ann_finest_level) %>% slice_head(prop = 0.01)
-cell_type_annotations_1percent = cell_type_annotations_1percent[order(cell_type_annotations_1percent$cellname),]
+cell_type_annotations_5percent = cell_type_annotations %>% group_by(ann_finest_level) %>% slice_head(prop = 0.05)
+cell_type_annotations_5percent = cell_type_annotations_5percent[order(cell_type_annotations_5percent$cellname),]
 
 
 #keep a subset of cells (1%)
-variable_singlecelldata_1percent = variable_data[,colnames(variable_data) %in% cell_type_annotations_1percent$cellname]
-variable_singlecelldata_1percent = variable_singlecelldata_1percent[,order(colnames(variable_singlecelldata_1percent))]
+variable_singlecelldata_5percent = variable_data[,colnames(variable_data) %in% cell_type_annotations_5percent$cellname]
+variable_singlecelldata_5percent = variable_singlecelldata_5percent[,order(colnames(variable_singlecelldata_5percent))]
 
 
 #write stuff
-write.csv(cell_type_annotations_1percent,file.path(params$hlca,'cell_type_annotations_1percent.csv'))
-write.csv(variable_singlecelldata_1percent,file.path(params$hlca,'variable_singlecelldata_1percent.csv'))
+write.csv(cell_type_annotations_5percent,file.path(params$hlca,'cell_type_annotations_5percent.csv'))
+write.csv(variable_singlecelldata_5percent,file.path(params$hlca,'variable_singlecelldata_5percent.csv'))
 ```
 
 
@@ -97,53 +97,187 @@ deconv_momf = deconvolute(bulk_gene_expression=bulk,
 
 ```{r real data deconvolution}
 #1. get data (RNAseq expression data)
-txi = readRDS(file.path(params$datapath,'lord_kallisto/part3/txi.rds'))
-
-txi$abundance = txi$abundance[,1:10]
+txi = readRDS(file.path(params$datapath,'lord_kallisto/part2/txi.rds'))
+txi = readRDS(file.path(params$datapath,'txi.rds'))
+#txi$abundance = txi$abundance[,1:10]
 #read stuff
-cell_type_annotations = read.csv(file.path(params$hlca,'cell_type_annotations_1percent.csv'), row.names = 1)
-variable_singlecelldata_1percent = as.matrix(read.csv(file.path(params$hlca,'variable_singlecelldata_1percent.csv'),row.names = 1))
+cell_type_annotations = read.csv(file.path(params$hlca,'cell_type_annotations_5percent.csv'), row.names = 1)
+variable_singlecelldata_5percent = as.matrix(read.csv(file.path(params$hlca,'variable_singlecelldata_5percent.csv'),row.names = 1))
 
-bulk = as.matrix(txi$abundance[sapply(strsplit(rownames(txi$abundance), ".",fixed = T), "[",1) %in% rownames(variable_singlecelldata_1percent),])
+bulk = as.matrix(txi$abundance[sapply(strsplit(rownames(txi$abundance), ".",fixed = T), "[",1) %in% rownames(variable_singlecelldata_5percent),])
 bulk = bulk[!duplicated(sapply(strsplit(rownames(bulk), ".",fixed = T), "[",1) ),]
 rownames(bulk) = sapply(strsplit(rownames(bulk), ".",fixed = T), "[",1) #matrix. 2800 genes X 10 cells. Floats (Counts). Raw abundance (so TPM)
 
-sc_data = variable_singlecelldata_1percent[rownames(variable_singlecelldata_1percent) %in% rownames(bulk),] #matrix. 2800 genes X 5802 cells. Integers (Counts). Raw.
+sc_data = variable_singlecelldata_5percent[rownames(variable_singlecelldata_5percent) %in% rownames(bulk),] #matrix. 2800 genes X 5802 cells. Integers (Counts). Raw.
 
-ct_annotations <- as.character(cell_type_annotations$ann_level_2) #vector. 5802 values. Cell types. characters.
+ct_annotations <- as.character(cell_type_annotations$ann_level_3) #vector. 5802 values. Cell types. characters.
 batch_ids <- as.character(cell_type_annotations$study) #vector. 5802 values. 11 studies. Characters.
 
 #2. Build a Signature Matrix
 signature_matrix_music <- build_model(sc_data, ct_annotations, "music", bulk_gene_expression = bulk, batch_ids = batch_ids)
-signature_matrix_bisque <- build_model(sc_data, ct_annotations, "bisque", bulk_gene_expression = bulk, batch_ids = batch_ids)
-signature_matrix_DWLS <- build_model(sc_data, ct_annotations, "DWLS", bulk_gene_expression = bulk, batch_ids = batch_ids)
-signature_matrix_momf <- build_model(sc_data, ct_annotations, "momf", bulk_gene_expression = bulk, batch_ids = batch_ids)
+#signature_matrix_bisque <- build_model(sc_data, ct_annotations, "bisque", bulk_gene_expression = bulk, batch_ids = batch_ids)
+#signature_matrix_DWLS <- build_model(sc_data, ct_annotations, "DWLS", bulk_gene_expression = bulk, batch_ids = batch_ids)
+#signature_matrix_momf <- build_model(sc_data, ct_annotations, "momf", bulk_gene_expression = bulk, batch_ids = batch_ids)
 
 
 #3. Deconvolute
-deconv_music = deconvolute(bulk_gene_expression=bulk,
+a = Sys.time()
+deconv_music = as.data.frame(deconvolute(bulk_gene_expression=bulk,
                           signature=signature_matrix_music,
                           method = "music",
                           single_cell_object = sc_data,
                           cell_type_annotations = ct_annotations,
-                          batch_ids = batch_ids)
+                          batch_ids = batch_ids))
+b = Sys.time()
+b-a
+#deconv_bisque = deconvolute(bulk_gene_expression=bulk,
+#                          signature=signature_matrix_bisque,
+#                          method = "bisque",
+#                          single_cell_object = sc_data,
+#                          cell_type_annotations = ct_annotations,
+#                          batch_ids = batch_ids)
 
-deconv_bisque = deconvolute(bulk_gene_expression=bulk,
-                          signature=signature_matrix_bisque,
-                          method = "bisque",
-                          single_cell_object = sc_data,
-                          cell_type_annotations = ct_annotations,
-                          batch_ids = batch_ids)
+#deconv_momf = deconvolute(bulk_gene_expression=bulk,
+#                          signature=signature_matrix_momf,
+#                          method = "momf",
+#                          single_cell_object = sc_data,
+#                          cell_type_annotations = ct_annotations,
+#                          batch_ids = batch_ids)
 
-deconv_momf = deconvolute(bulk_gene_expression=bulk,
-                          signature=signature_matrix_momf,
-                          method = "momf",
-                          single_cell_object = sc_data,
-                          cell_type_annotations = ct_annotations,
-                          batch_ids = batch_ids)
+
+
+#add attributes
+deconv_music$tissue = 'Sain'
+deconv_music$tissue[grep('Tumeur',rownames(deconv_music))] = 'Tumeur'
+deconv_music$`Record ID` = sapply(strsplit(rownames(deconv_music), "_"), "[",5)
+
+#merge clinical data
+deconv_music_clinical = merge(deconv_music,clinical_bigtable, by = 'Record ID')
+
+#pivot longer
+deconv = deconv_music_clinical %>% pivot_longer(names_to = "celltypes",values_to = 'fraction of total', cols = 2:25)
+
+#boxplot
+tumor_normal_transition = ggplot(deconv, aes(x=tissue,y=`fraction of total`,fill=tissue)) +  
+    geom_boxplot(varwidth=F) + 
+    facet_grid( . ~celltypes, scales = "free_x", space = "free_x",switch = 'y') 
+
+#
+pdf(file.path(params$datapath,paste0('results/deconvolution/Figure1_normal_tumor_celltypetransition.pdf')),width = 20,height = 6)
+tumor_normal_transition
+dev.off()
+
+#a bunch of ANOVAs.
+anova(lm(AT1~tissue,deconv_music_clinical))
+anova(lm(AT2~tissue,deconv_music_clinical))
+anova(lm(Rare~tissue,deconv_music_clinical))
+
+tumor = deconv_music_clinical[deconv_music_clinical$tissue=='Tumeur',]
+anova(lm(Rare~`Tumor_Percentage of Tumor`,tumor))
+
+anova(lm(`B cell lineage`~`Tumor_stage clinic` + tissue,tumor))
+
+deconv$Tumor_Grade[is.na(deconv$Tumor_Grade)] = 'unknown'
+
+deconv_filtered = deconv %>%
+    filter(celltypes == 'AT1' | celltypes == 'AT2' | celltypes == 'Rare' | celltypes == 'B cell lineage') 
+
+deconv_filtered$celltypes = factor(deconv_filtered$celltypes, levels = c('AT1','AT2','Rare','B cell lineage'))
+
+celltype_specific_plots = deconv_filtered %>%
+    ggplot(aes(x=tissue,y=`fraction of total`,fill=tissue)) +  
+    geom_boxplot(varwidth=F) + 
+    facet_grid(celltypes~Tumor_Grade, scales = "free_y", space = "free_x",switch = 'y') +
+    ggtitle('Cell type ~ Tumor Grade')
+
+pdf(file.path(params$datapath,paste0('results/deconvolution/Figure2_normal_tumor_grade.pdf')),width = 10,height = 12)
+celltype_specific_plots
+dev.off()
 
 ```
 
+
+```{r prcomp}
+deconv_pca = prcomp(deconv_music_clinical[,2:25],scale = F)
+
+pca_loadings = fviz_pca_var(deconv_pca,
+              col.var = "contrib", # Color by contributions to the PC
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+              repel = TRUE)
+
+pca_tissue = fviz_pca_ind(deconv_pca,
+            col.ind = deconv_music_clinical$tissue, # color by groups
+             geom = 'point',
+             palette = c("#00AFBB",  "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             #ellipse.level=0.95,
+           #  ellipse.type = "confidence",
+           #  legend.title = "Groups",
+             repel = TRUE
+             )
+
+
+
+###tumor specific
+deconv_music_sub = deconv_music_clinical[deconv_music_clinical$tissue == 'Tumeur',]
+deconv_pca = prcomp(deconv_music_sub[,2:25],scale = F)
+
+#
+pca_vital = fviz_pca_ind(deconv_pca,
+             col.ind = deconv_music_sub$`Profil_Vital status`, # color by groups
+             geom = 'point',
+             palette = RColorBrewer::brewer.pal(n = 3, name = "Set1"),
+               addEllipses = TRUE, # Concentration ellipses
+               ellipse.type = "confidence",
+               legend.title = "Vital status",
+             repel = TRUE
+)+ ggtitle('vital status')
+
+#
+pca_egfr = fviz_pca_ind(deconv_pca,
+            col.ind = deconv_music_sub$`TMA_Oncomine_Gene summary (choice=EGFR)`, # color by groups
+             geom = 'point',
+             palette = RColorBrewer::brewer.pal(n = 2, name = "Set1"),
+             addEllipses = TRUE, # Concentration ellipses
+           #  ellipse.type = "confidence",
+             legend.title = "EGFR status",
+             repel = TRUE
+             ) + ggtitle('EGFR status (oncomine)')
+#
+
+pca_tumorgrade = fviz_pca_ind(deconv_pca,
+             col.ind = deconv_music_sub$Tumor_Grade, # color by groups
+             geom = 'point',
+             palette = RColorBrewer::brewer.pal(n = 4, name = "Set1"),
+             addEllipses = TRUE, # Concentration ellipses
+             ellipse.type = "confidence",
+            # ellipse.level=0.95,
+               legend.title = "Tumor grade",
+             repel = TRUE
+)+ ggtitle('Tumor grade')
+
+
+
+pdf(file.path(params$datapath,paste0('results/deconvolution/Figure3_normal_tumor_grade.pdf')),width = 18,height = 16)
+
+pca_loadings +  pca_tissue + pca_vital + pca_egfr + pca_tumorgrade + plot_annotation(tag_levels = 'A')
+
+dev.off()
+
+```
+
+
+
+```{r gene expression}
+#gene expression data
+ge =  as.data.frame(t(bulk))
+ge$`Record ID` = sapply(strsplit(rownames(ge), "_"), "[",5)
+
+ge$tissue = 'Sain'
+ge$tissue[grep('Tumeur',rownames(ge))] = 'Tumeur'
+#merge clinical data
+ge_clinical = merge(ge,clinical_bigtable, by = 'Record ID')
+```
 
 
 ```{r compare methods}
